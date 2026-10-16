@@ -1,0 +1,172 @@
+/* ---- PDF viewer modal ----
+ *
+ * Full-screen in-page viewer for the poster PDFs, driven by pdf-modal.js. Split
+ * out of each site's index.css because all five carried a byte-identical copy.
+ */
+
+.pdf-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.pdf-overlay.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-overlay.show {
+  opacity: 1;
+}
+
+.pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg);
+  /* Was #e5e5e5 — 1.26:1 against the white toolbar, invisible. */
+  border-bottom: 1px solid var(--border);
+  color: var(--text-heading);
+  flex-shrink: 0;
+  position: relative;
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+}
+
+.pdf-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 1;
+  min-width: 0;
+  z-index: 1;
+}
+
+.pdf-logo-close {
+  color: var(--text-hover);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.pdf-logo-close:hover {
+  opacity: 0.7;
+}
+
+.pdf-logo-close .logo-desktop {
+  display: inline-flex;
+}
+
+.pdf-logo-close .logo-mobile {
+  display: none;
+}
+
+.pdf-title {
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-heading);
+}
+
+.pdf-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pdf-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  /* Was #dbdbdb — 1.38:1 against the toolbar, so these buttons had no perceivable
+     boundary at all; WCAG 1.4.11 wants 3:1 for a control edge. */
+  border: 1px solid var(--border);
+  background: var(--bg-code);
+  color: var(--text-quiet);
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  /* Only the three properties the :hover rule below actually changes. */
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  text-decoration: none;
+}
+
+.pdf-toolbar-btn:hover {
+  background: var(--bg);
+  border-color: var(--border-hover);
+  color: var(--text-hover);
+}
+
+.pdf-toolbar-btn.close-btn {
+  border: none;
+  background: none;
+  font-size: 22px;
+  padding: 4px 8px;
+  line-height: 1;
+  color: var(--text-quiet);
+}
+
+.pdf-toolbar-btn.close-btn:hover {
+  background: none;
+  border-color: transparent;
+  color: var(--text-hover);
+}
+
+.pdf-viewer-container {
+  flex: 1;
+  width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg-code);
+}
+
+.pdf-viewer-frame {
+  display: block;
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* Deliberately 640px rather than a Bulma breakpoint: this is the width at which
+ * the toolbar's own contents stop fitting — the title plus both labelled buttons —
+ * so it collapses to icon-only here, independent of the page layout breakpoints. */
+@media screen and (max-width: 640px) {
+  .pdf-toolbar {
+    padding: 10px 14px;
+  }
+
+  .pdf-title {
+    font-size: 13px;
+    flex-grow: 1;
+  }
+
+  .pdf-toolbar-btn span.btn-label {
+    display: none;
+  }
+
+  .pdf-toolbar-btn {
+    padding: 7px 10px;
+  }
+
+  .pdf-logo-close .logo-desktop {
+    display: none;
+  }
+
+  .pdf-logo-close .logo-mobile {
+    display: inline-flex;
+  }
+}

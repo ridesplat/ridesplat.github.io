@@ -1,0 +1,313 @@
+/* ---- Slideshow: peeking carousel ----
+ *
+ * Controls sit under the track rather than floating over the media, so nothing
+ * covers a result while you are reading it. Neighbouring slides stay visible at
+ * reduced scale — in full colour, not dimmed — to signal that the set continues,
+ * and the track is clipped to the content column: the peeking neighbours are cut
+ * off exactly where the surrounding text and teaser end, not at the window edge.
+ *
+ * Colours resolve through the theme tokens in theme.css, so the controls follow the
+ * page rather than being pinned to a light-mode value — the arrows, the active dot and
+ * the focus ring were all #363636, which measures 1.57:1 on the dark background.
+ */
+
+.slideshow {
+  /* Fraction of the content column the centred active slide occupies. The rest
+     of the column, split either side, is what the neighbours peek through, so
+     they reach right to the column edges rather than stopping short inside. */
+  --slideshow-peek: 0.68;
+  --slideshow-slide-w: calc(var(--slideshow-peek) * 100%);
+  --slideshow-gap: 20px;
+
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  outline: none;
+}
+
+/* The track is wider than the column and slides horizontally, so horizontal
+   overflow is clipped here at the column edges.
+
+   `overflow-x: clip` hides the off-centre slides, but `overflow-y: visible` is
+   needed so the active slide's shadow isn't sheared off. A plain `overflow` pair
+   like that does not establish a containing block for the clip on every engine,
+   so the hidden neighbours could still be reached by a sideways touch-scroll —
+   the page appeared to have something too wide in it. The clip lands on the padding-box
+   edge, which is `overflow-clip-margin`'s initial value, so nothing needs to be said
+   here — an earlier `overflow-clip-margin: 0 24px` was silently dropped anyway, since
+   the property takes a single length and two is a parse error. */
+.slideshow-viewport {
+  overflow-x: clip;
+  overflow-y: visible;
+  padding: 10px 0;
+}
+
+/* The track is a ring, not a strip: every slide occupies the same grid cell and
+   slideshow.js translates each one to its nearest cyclic seat. That is what lets
+   last-to-first animate as a single step instead of snapping across a seam.
+   A one-cell grid stacks them and keeps the cell centred in the column; the gap
+   is carried as `column-gap` purely so the JS can read the spacing from it. */
+.slideshow-track {
+  display: grid;
+  /* One column, as wide as a slide, centred in the track. `justify-content`
+     centres the column track itself; the slides then all sit in that one cell,
+     so the active slide is centred in the content column and the transforms
+     carry the neighbours out symmetrically either side. */
+  grid-template-columns: var(--slideshow-slide-w);
+  justify-content: center;
+  align-items: center;
+  column-gap: var(--slideshow-gap);
+  position: relative;
+  width: 100%;
+}
+
+.slideshow-track > .slideshow-slide {
+  grid-area: 1 / 1;
+  justify-self: stretch;
+}
+
+.slideshow-track.is-draggable {
+  cursor: grab;
+}
+
+.slideshow-track.is-draggable:active {
+  cursor: grabbing;
+}
+
+.slideshow-slide {
+  /* The grid cell is already a slide wide; stretching into it avoids resolving a
+     percentage against the wrong box, which left the active slide off-centre. */
+  width: auto;
+  min-width: 0;
+  /* Neighbours sit back slightly so the active slide reads as the subject rather
+     than one of several equal panels. The scale is exposed as a custom property
+     because the JS composes it into the same transform as the translate.
+
+     Scale alone carries that, deliberately: fading the neighbours with opacity
+     washed them toward the white page, so a render being previewed appeared grey
+     rather than as itself. These are research results — the peeking edges should
+     show their real colour. The smaller size and the shadow depth below are enough
+     to say which one is selected. */
+  --slideshow-scale: 0.92;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.slideshow-slide.is-active {
+  cursor: default;
+}
+
+/* Rounded corners and the shadow live on the slide's own media so the shape
+   follows the content, whatever it is. */
+.slideshow-slide > img,
+.slideshow-slide > picture > img,
+.slideshow-slide > video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px var(--shadow);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.slideshow-slide.is-active > img,
+.slideshow-slide.is-active > picture > img,
+.slideshow-slide.is-active > video {
+  box-shadow: 0 8px 28px var(--shadow-raised);
+}
+
+/* ---- Controls ---- */
+
+/* Tucked just under the track: the controls belong to the carousel above them,
+   and a wide gap reads as an unrelated row of dots. */
+.slideshow-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px 0 0;
+}
+
+/* Bare glyphs, no chrome. A ring around each arrow competes with the media for
+   attention and makes the row look like a form control. */
+.slideshow-prev,
+.slideshow-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--arrow);
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.slideshow-prev:hover,
+.slideshow-next:hover {
+  background: var(--bg-chip);
+  color: var(--text-heading);
+}
+
+.slideshow-prev:focus-visible,
+.slideshow-next:focus-visible,
+.slideshow-dot:focus-visible,
+.slideshow:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+}
+
+/* The inactive dot was #dbdbdb, which is 1.38:1 against the white page — a control
+   that WCAG 1.4.11 asks to reach 3:1, and in practice one that vanished on a bright
+   screen. #8f8f8f is the lightest step that clears it, at 3.23:1, so the dots stay
+   quiet next to the 12.08:1 active dot rather than competing with it. */
+.slideshow-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--dot);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.slideshow-dot:hover {
+  background: var(--dot-hover);
+}
+
+.slideshow-dot.is-active {
+  background: var(--dot-active);
+  transform: scale(1.25);
+}
+
+/* Announces the slide change to assistive tech. Visually hidden rather than
+   display:none, which would stop it being read at all. */
+.slideshow-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Comparison sliders inside a slideshow ----
+   The slider is an interactive control, so clicking a neighbour to advance is
+   disabled: inside one of these a click means play/pause. */
+.slideshow-no-swipe .slideshow-slide {
+  cursor: default;
+}
+
+.slideshow-no-swipe .video-compare-container {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px var(--shadow);
+}
+
+.slideshow-no-swipe .slideshow-slide.is-active .video-compare-container {
+  box-shadow: 0 8px 28px var(--shadow-raised);
+}
+
+/* ---- Tablet ---- */
+@media screen and (max-width: 1023px) {
+  .slideshow {
+    --slideshow-peek: 0.8;
+    --slideshow-gap: 16px;
+  }
+}
+
+/* ---- Mobile ----
+   No peek: the active slide takes the full column. At phone widths a peek would
+   shrink the result itself below the point where its detail is readable, which
+   is the whole reason these figures are here. */
+@media screen and (max-width: 768px) {
+  .slideshow {
+    --slideshow-peek: 1;
+    --slideshow-gap: 12px;
+  }
+
+  /* Neighbours stay fully opaque here, exactly as on desktop — they are simply
+     off-screen. With `--slideshow-peek: 1` each slide is the full column width, so
+     the seats either side sit entirely outside the viewport, and `overflow-x: clip`
+     up there hides them and takes them out of hit-testing.
+
+     They used to be `opacity: 0` + `visibility: hidden`, which made a step three
+     animations on disagreeing timelines: transform on a cubic-bezier, opacity on
+     ease, and visibility — a *discrete* property that cannot be eased, so it flipped
+     to visible at the start of the move while opacity was still 0. Mid-step two
+     slides were both part-transparent and the page showed through both, which is the
+     flash; and because only one slide is ever on screen at this width, the translate
+     underneath it was motion nobody could see. The result read as a fade that was
+     also sliding, with two curves fighting.
+
+     Now a step is one property on one curve, identical to the desktop feel: the ring
+     translates and the content follows the thumb. No scale, since at full width there
+     is no peek for it to distinguish. */
+  .slideshow-slide {
+    --slideshow-scale: 1;
+  }
+
+  .slideshow-controls {
+    padding-top: 8px;
+    gap: 9px;
+  }
+
+  /* Roomier hit areas for thumbs, without drawing the glyphs any larger. */
+  .slideshow-prev,
+  .slideshow-next {
+    width: 34px;
+    height: 34px;
+  }
+
+  .slideshow-dot {
+    width: 9px;
+    height: 9px;
+  }
+}
+
+/* Sticky :hover after a tap is worse than no hover feedback. */
+@media (hover: none) {
+  .slideshow-prev:hover,
+  .slideshow-next:hover {
+    background: none;
+    color: var(--arrow);
+  }
+
+  .slideshow-dot:hover {
+    background: var(--dot);
+  }
+
+  .slideshow-dot.is-active:hover {
+    background: var(--dot-active);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slideshow-track,
+  .slideshow-slide,
+  .slideshow-prev,
+  .slideshow-next,
+  .slideshow-dot {
+    transition: none;
+  }
+}
+
+/* ---- Reserving space before the poster decodes ----
+ * A <video> with `preload="none"` and a deferred poster has no intrinsic size, so
+ * its box holds the CSS default 300x150 until the still frame arrives and the whole
+ * section then jumps. Declaring the source's own ratio reserves the right height on
+ * first paint. slideshow.js re-measures on `img.load`, which never fires for a
+ * <video poster>, so nothing was correcting it either. */
+.slideshow-slide > video {
+  aspect-ratio: 800 / 533;
+}

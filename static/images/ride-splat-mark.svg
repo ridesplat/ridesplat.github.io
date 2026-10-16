@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">RIDE-Splat</title>
+  <desc id="desc">A clean perspective road with a cyan-to-violet windshield reflection over its left side</desc>
+  <defs>
+    <linearGradient id="reflection" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#75d7e8" stop-opacity="0.84"/>
+      <stop offset="0.5" stop-color="#84b8eb" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#ad8cf4" stop-opacity="0.84"/>
+    </linearGradient>
+    <clipPath id="badge-clip">
+      <rect width="512" height="512" rx="112"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#173f3c"/>
+  <path d="M102 428L220 76H239L143 428Z" fill="#fff"/>
+  <path d="M410 428L292 76H273L369 428Z" fill="#fff"/>
+  <path d="M256 390V326" fill="none" stroke="#f6c445" stroke-width="20" stroke-linecap="round"/>
+  <path d="M256 282V242" fill="none" stroke="#f6c445" stroke-width="15" stroke-linecap="round"/>
+  <path d="M256 207V181" fill="none" stroke="#f6c445" stroke-width="11" stroke-linecap="round"/>
+  <path d="M256 155V139" fill="none" stroke="#f6c445" stroke-width="7" stroke-linecap="round"/>
+  <g clip-path="url(#badge-clip)">
+    <path d="M0 0H132C220 52 266 146 250 248C234 354 164 456 70 512H0Z" fill="url(#reflection)"/>
+  </g>
+</svg>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function () {
+            var theme = 'light';
+            try { theme = localStorage.getItem('theme-preference') || 'light'; } catch (e) { }
+            document.documentElement.setAttribute('data-theme', theme);
+            document.addEventListener('DOMContentLoaded', function () {
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff');
+            });
+        })();
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="author" content="Kevin David Hayes, Alex Hanson, Allen Tu, Pranav Asthana, Matthias Zwicker, Tom Goldstein">
+    <meta name="description"
+        content="RIDE-Splat reconstructs reflection-free 3D Gaussian Splatting scenes from posed driving video without clean images, reflection masks, or pretrained networks.">
+    <meta name="keywords"
+        content="RIDE-Splat, 3D Gaussian Splatting, 3DGS, windshield reflection removal, reflection-free 3D reconstruction, novel-view synthesis, driving video, dashcam dataset">
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+    <title>RIDE-Splat: Reflection Removal for In-the-Wild Driving Environments</title>
+    <link rel="canonical" href="https://ridesplat.github.io/">
+    <link rel="alternate" hreflang="en" href="https://ridesplat.github.io/">
+    <link rel="alternate" hreflang="x-default" href="https://ridesplat.github.io/">
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6Y69MSL64Y"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-6Y69MSL64Y');
+    </script>
+
+    <meta property="og:title" content="RIDE-Splat: Reflection Removal for In-the-Wild Driving Environments">
+    <meta property="og:description"
+        content="Reflection-free 3D reconstruction from posed driving video, without clean training images, reflection masks, or pretrained networks.">
+    <meta property="og:url" content="https://ridesplat.github.io/">
+    <meta property="og:image" content="https://ridesplat.github.io/static/images/teaser-card.jpg">
+    <meta property="og:image:secure_url" content="https://ridesplat.github.io/static/images/teaser-card.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt"
+        content="Four-way novel-view comparison of 3DGS, DC-Gaussian, RobustSplat, and RIDE-Splat on a driving scene with physical windshield reflections.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="RIDE-Splat">
+    <meta property="og:locale" content="en_US">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RIDE-Splat: Reflection Removal for In-the-Wild Driving Environments">
+    <meta name="twitter:description"
+        content="Reflection-free 3D reconstruction from posed driving video, without clean training images, reflection masks, or pretrained networks.">
+    <meta name="twitter:image" content="https://ridesplat.github.io/static/images/teaser-card.jpg">
+    <meta name="twitter:image:alt"
+        content="Four-way novel-view comparison of 3DGS, DC-Gaussian, RobustSplat, and RIDE-Splat.">
+    <meta name="twitter:url" content="https://ridesplat.github.io/">
+    <meta name="twitter:domain" content="ridesplat.github.io">
+
+    <meta name="citation_title" content="RIDE-Splat: Reflection Removal for In-the-Wild Driving Environments">
+    <meta name="citation_author" content="Hayes, Kevin David">
+    <meta name="citation_author" content="Hanson, Alex">
+    <meta name="citation_author" content="Tu, Allen">
+    <meta name="citation_author" content="Asthana, Pranav">
+    <meta name="citation_author" content="Zwicker, Matthias">
+    <meta name="citation_author" content="Goldstein, Tom">
+    <meta name="citation_publication_date" content="2026">
+    <meta name="citation_language" content="en">
+    <meta name="citation_fulltext_html_url" content="https://ridesplat.github.io/">
+    <meta name="citation_keywords" content="3D Gaussian Splatting; reflection removal; windshield reflections; novel-view synthesis; driving video">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "@id": "https://ridesplat.github.io/#article",
+      "headline": "RIDE-Splat: Reflection Removal for In-the-Wild Driving Environments",
+      "author": [
+        {"@type": "Person", "name": "Kevin David Hayes", "url": "https://kevindavidhayes.com/", "affiliation": {"@type": "CollegeOrUniversity", "name": "University of Maryland, College Park"}},
+        {"@type": "Person", "name": "Alex Hanson", "url": "https://www.cs.umd.edu/~hanson/", "affiliation": {"@type": "CollegeOrUniversity", "name": "University of Maryland, College Park"}},
+        {"@type": "Person", "name": "Allen Tu", "url": "https://tuallen.github.io", "affiliation": {"@type": "CollegeOrUniversity", "name": "University of Maryland, College Park"}},
+        {"@type": "Person", "name": "Pranav Asthana", "url": "https://pranav-asthana.github.io/", "affiliation": {"@type": "CollegeOrUniversity", "name": "University of Maryland, College Park"}},
+        {"@type": "Person", "name": "Matthias Zwicker", "url": "https://www.cs.umd.edu/~zwicker/", "affiliation": {"@type": "CollegeOrUniversity", "name": "University of Maryland, College Park"}},
+        {"@type": "Person", "name": "Tom Goldstein", "url": "https://www.cs.umd.edu/~tomg/", "affiliation": {"@type": "CollegeOrUniversity", "name": "University of Maryland, College Park"}}
+      ],
+      "description": "A two-pass 3D Gaussian Splatting pipeline for reflection-free 3D reconstruction from posed driving video captured through a windshield.",
+      "abstract": "RIDE-Splat reconstructs reflection-free 3D scenes from posed driving video by separating world-consistent transmission into a 3D Gaussian Splatting scene and camera-attached windshield reflections into a shared signed image.",
+      "image": "https://ridesplat.github.io/static/images/teaser-card.jpg",
+      "keywords": "3D Gaussian Splatting, reflection removal, windshield reflections, novel-view synthesis, driving video",
+      "inLanguage": "en",
+      "datePublished": "2026",
+      "dateModified": "2026-10-14",
+      "isAccessibleForFree": true,
+      "publisher": {"@type": "CollegeOrUniversity", "name": "University of Maryland, College Park", "url": "https://www.umd.edu/"},
+      "mainEntityOfPage": {"@type": "WebPage", "@id": "https://ridesplat.github.io/"},
+      "url": "https://ridesplat.github.io/"
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="./static/webfonts/noto-sans-latin.woff2?v=2026.10.14.10" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="./static/css/noto-sans.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans&amp;display=swap"
+        media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans&amp;display=swap"></noscript>
+    <link rel="stylesheet" href="./static/css/bulma.min.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="./static/css/theme.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="./static/css/rhythm.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="./static/css/icons.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="./static/css/slideshow.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="./static/css/pdf-modal.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="./static/css/index.css?v=2026.10.14.10">
+    <link rel="stylesheet" href="./static/css/interactions.css?v=2026.10.14.10">
+    <link rel="icon" href="./static/images/ride-splat-mark.svg?v=2026.10.14.10" type="image/svg+xml">
+    <link rel="icon" href="./static/images/favicon-32.png?v=2026.10.14.10" type="image/png" sizes="32x32">
+    <link rel="icon" href="./static/images/favicon-16.png?v=2026.10.14.10" type="image/png" sizes="16x16">
+    <link rel="icon" href="./static/images/favicon.ico?v=2026.10.14.10" sizes="any">
+    <link rel="apple-touch-icon" href="./static/images/apple-touch-icon.png?v=2026.10.14.10" sizes="180x180">
+
+    <script defer src="./static/js/video_comparison.js?v=2026.10.14.10"></script>
+    <script defer src="./static/js/slideshow.js?v=2026.10.14.10"></script>
+    <script defer src="./static/js/script.js?v=2026.10.14.10"></script>
+    <script defer src="./static/js/pdf-modal.js?v=2026.10.14.10"></script>
+    <script defer src="./static/js/theme-switcher.js?v=2026.10.14.10"></script>
+</head>
+
+<body>
+    <main>
+        <section class="hero">
+            <div class="hero-body">
+                <div class="container is-max-desktop">
+                    <div class="columns is-centered">
+                        <div class="column has-text-centered">
+                            <h1 class="title is-1 publication-title">
+                                RIDE-Splat: Reflection Removal for<br class="title-break"><span class="nowrap">In-the-Wild</span> Driving Environments
+                            </h1>
+                            <div class="is-size-5 publication-authors">
+                                <span class="author-block"><a href="https://kevindavidhayes.com/" target="_blank" rel="noopener noreferrer">Kevin David Hayes</a>,</span>
+                                <span class="author-block"><a href="https://www.cs.umd.edu/~hanson/" target="_blank" rel="noopener noreferrer">Alex Hanson</a>,</span>
+                                <span class="author-block"><a href="https://tuallen.github.io" target="_blank" rel="noopener noreferrer">Allen Tu</a>,</span>
+                                <span class="author-block"><a href="https://pranav-asthana.github.io/" target="_blank" rel="noopener noreferrer">Pranav Asthana</a>,</span>
+                                <span class="author-block"><a href="https://www.cs.umd.edu/~zwicker/" target="_blank" rel="noopener noreferrer">Matthias Zwicker</a>,</span>
+                                <span class="author-block"><a href="https://www.cs.umd.edu/~tomg/" target="_blank" rel="noopener noreferrer">Tom Goldstein</a></span>
+                            </div>
+                            <div class="is-size-5 publication-authors publication-affiliation">
+                                <span class="author-block"><a class="plain-link" href="https://www.umd.edu/" target="_blank" rel="noopener noreferrer">University of Maryland, College Park</a></span>
+                            </div>
+
+                            <div class="publication-links">
+                                <span class="link-block">
+                                    <a href="#" aria-disabled="true" tabindex="-1"
+                                        class="external-link button is-normal is-rounded is-dark is-placeholder"
+                                        title="Paper coming soon">
+                                        <span class="icon"><i class="fas fa-file-pdf" aria-hidden="true"></i></span>
+                                        <span>Paper</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="#" aria-disabled="true" tabindex="-1"
+                                        class="external-link button is-normal is-rounded is-dark is-placeholder">
+                                        <span class="icon"><i class="ai ai-arxiv" aria-hidden="true"></i></span>
+                                        <span>arXiv</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="#" aria-disabled="true" tabindex="-1"
+                                        class="external-link button is-normal is-rounded is-dark is-placeholder">
+                                        <span class="icon"><i class="fab fa-github" aria-hidden="true"></i></span>
+                                        <span>Code</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="#" aria-disabled="true" tabindex="-1"
+                                        class="external-link button is-normal is-rounded is-dark is-placeholder"
+                                        title="Dataset release pending">
+                                        <span class="icon"><i class="fas fa-download" aria-hidden="true"></i></span>
+                                        <span>Dataset</span>
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="hero teaser" aria-label="RIDE-Splat teaser">
+            <div class="hero-body">
+                <div class="container teaser-wide-container">
+                    <div class="video-compare-container video-compare-container--four-way"
+                        style="background-image: url('static/videos/compare_rs2_4way_poster.jpg?v=2026.10.14.10'); background-position: center; background-size: cover"
+                        data-top-left-label="3DGS"
+                        data-top-right-label="DC-Gaussian"
+                        data-bottom-left-label="RobustSplat"
+                        data-bottom-right-label="RIDE-Splat (Ours)">
+                        <video class="video" id="compare_rs2_four_way" loop autoplay playsinline muted preload="auto"
+                            onplay="resizeAndPlayFourWay(this)">
+                            <source src="static/videos/compare_rs2_4way.av1.mp4?v=2026.10.14.10"
+                                type='video/mp4; codecs="av01.0.12M.08"'>
+                            <source src="static/videos/compare_rs2_4way.mp4?v=2026.10.14.10" type="video/mp4">
+                        </video>
+                        <canvas class="videoMerge videoMerge--four-way" id="compare_rs2_four_wayMerge"
+                            tabindex="0"
+                            aria-label="Interactive four-way Martin video comparison: 3DGS at top left, DC-Gaussian at top right, RobustSplat at bottom left, and RIDE-Splat at bottom right. Move the divider with the pointer or arrow keys. Press Space to pause or play."></canvas>
+                    </div>
+                    <p class="comparison-caption has-text-centered"><strong>Martin</strong> &mdash; RIDE-Splat Dataset.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="abstract">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered has-text-centered">
+                    <div class="column is-four-fifths">
+                        <h2 class="title is-3">Abstract</h2>
+                        <div class="content has-text-justified">
+                            <p>
+                                Driving video captured through a windshield violates the world-space consistency assumed by 3D Gaussian Splatting (3DGS): the road scene exhibits parallax while cabin reflections remain attached to the camera, causing standard 3DGS to embed reflected content into the reconstructed scene. We introduce <strong>RIDE-Splat</strong>, a pipeline for reflection-free 3D reconstruction from posed driving video without clean images, reflection masks, or pretrained networks.
+                            </p>
+                            <p>
+                                RIDE-Splat assigns world-consistent transmission through the windshield to a 3DGS scene and the dominant camera-attached reflection to one shared, signed RGB image. It builds the clean reconstruction in two passes. First, it learns the 3D geometry and the signed reflection image, representing both added radiance and transmission attenuation. Then, it uses the reflection-removed training images to fit a clean 3DGS model. At inference, the reflection image is discarded, preserving the standard 3DGS rendering path.
+                            </p>
+                            <p>
+                                We also introduce the <strong>RIDE-Splat Dataset</strong>, the first 3D reconstruction benchmark for reflection removal from driving video, with real driving scenes, physical windshield reflections in training views, and separately captured non-reflective evaluation images. Across the RIDE-Splat Dataset, XLD, and Wayve, RIDE-Splat outperforms 3DGS, DC-Gaussian, and RobustSplat on all nine aggregate metrics, improving PSNR by up to 3.59&nbsp;dB and reducing LPIPS by up to 0.0876. It achieves the highest metrics in 38 of 42 per-scene comparisons while removing windshield reflections and preserving the transmitted scene.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="method">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered has-text-centered">
+                    <div class="column is-full-width">
+                        <h2 class="title is-3">Method</h2>
+                        <div class="content has-text-justified section-copy">
+                            <p>
+                                Given only posed driving frames with windshield reflections, <strong>RIDE-Splat</strong> separates the superimposed signals in the coordinate systems where they remain consistent. A 3D Gaussian Splatting (3DGS) scene represents the parallax-bearing transmission, while one shared, signed RGB image represents the dominant camera-attached reflection. The signed image models both added reflected radiance and attenuation of the transmitted scene without clean training images, reflection masks, pretrained networks, view conditioning, or per-frame coefficients.
+                            </p>
+                        </div>
+                        <picture>
+                            <source srcset="./static/images/method-pipeline.webp?v=2026.10.14.10" type="image/webp">
+                            <img class="paper-figure figure-wide" src="./static/images/method-pipeline.png?v=2026.10.14.10"
+                                width="2600" height="1400" decoding="async"
+                                alt="RIDE-Splat two-phase pipeline: joint optimization separates a 3DGS scene from a shared signed reflection image, then reflection self-localization refits a clean 3DGS reconstruction"
+                                loading="lazy">
+                        </picture>
+                        <div class="content has-text-justified section-copy">
+                            <p>
+                                In <strong>Phase I</strong>, a geometry warm-up establishes the scene before joint photometric optimization recovers the 3DGS model and reflection image; an L1 penalty on the reflection biases ambiguous content toward the 3D scene. <strong>Phase II</strong> takes the maximum absolute response across reflection channels, smooths and normalizes it into a continuous spatial weight, then restarts the decomposition from scratch with that support frozen. This self-localized refit suppresses weak scene leakage without adding optimized parameters. At inference, RIDE-Splat discards the reflection image and renders the clean scene through the standard 3DGS path.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="dataset">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered">
+                    <div class="column is-full">
+                        <div class="dataset-heading">
+                            <span aria-hidden="true"></span>
+                            <h2 class="title is-3 has-text-centered">RIDE-Splat Dataset</h2>
+                            <a href="#" aria-disabled="true" tabindex="-1"
+                                class="button is-rounded dataset-heading-download is-placeholder"
+                                title="Dataset release pending" aria-label="Dataset release pending">
+                                <span class="icon"><i class="fas fa-download" aria-hidden="true"></i></span>
+                            </a>
+                        </div>
+                        <div class="content has-text-justified">
+                            <p>
+                                The <strong>RIDE-Splat Dataset</strong> is the first 3D reconstruction benchmark for reflection removal from driving video with physical windshield reflections and non-reflective evaluation images. Each scene contains two jointly registered traversals captured minutes apart with the same rigid camera mount: models train only on the <strong>reflective traversal (left)</strong>, while the <strong>non-reflective evaluation traversal (right)</strong> is held out for evaluation. Because traffic, illumination, and the exact trajectory can differ between passes, the evaluation images are close references rather than pixel-exact targets.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container dataset-carousel-container">
+                <div class="slideshow slideshow-dataset" tabindex="0"
+                    data-advance-on-ended="true" aria-label="RIDE-Splat Dataset scenes">
+                    <div class="slideshow-viewport">
+                        <div class="slideshow-track">
+                            <div class="slideshow-slide">
+                                <video class="dataset-video" data-click-toggle playsinline muted preload="none" width="1280" height="344"
+                                    aria-label="Leesburg reflective traversal on the left and non-reflective traversal on the right; click to pause or play"
+                                    data-poster="static/videos/dataset_rs1_poster.jpg?v=2026.10.14.10">
+                                    <source data-src="static/videos/dataset_rs1.av1.mp4?v=2026.10.14.10" type='video/mp4; codecs="av01.0.04M.08"'>
+                                    <source data-src="static/videos/dataset_rs1.mp4?v=2026.10.14.10" type="video/mp4">
+                                </video>
+                                <p class="comparison-caption has-text-centered"><strong>Leesburg</strong> &mdash; residential streets in a historic town.</p>
+                            </div>
+                            <div class="slideshow-slide">
+                                <video class="dataset-video" data-click-toggle playsinline muted preload="none" width="1280" height="344"
+                                    aria-label="Martin reflective traversal on the left and non-reflective traversal on the right; click to pause or play"
+                                    data-poster="static/videos/dataset_rs2_poster.jpg?v=2026.10.14.10">
+                                    <source data-src="static/videos/dataset_rs2.av1.mp4?v=2026.10.14.10" type='video/mp4; codecs="av01.0.04M.08"'>
+                                    <source data-src="static/videos/dataset_rs2.mp4?v=2026.10.14.10" type="video/mp4">
+                                </video>
+                                <p class="comparison-caption has-text-centered"><strong>Martin</strong> &mdash; tree-lined institutional district.</p>
+                            </div>
+                            <div class="slideshow-slide">
+                                <video class="dataset-video" data-click-toggle playsinline muted preload="none" width="1280" height="344"
+                                    aria-label="Reston reflective traversal on the left and non-reflective traversal on the right; click to pause or play"
+                                    data-poster="static/videos/dataset_rs3_poster.jpg?v=2026.10.14.10">
+                                    <source data-src="static/videos/dataset_rs3.av1.mp4?v=2026.10.14.10" type='video/mp4; codecs="av01.0.04M.08"'>
+                                    <source data-src="static/videos/dataset_rs3.mp4?v=2026.10.14.10" type="video/mp4">
+                                </video>
+                                <p class="comparison-caption has-text-centered"><strong>Reston</strong> &mdash; suburban streets.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slideshow-controls">
+                        <button type="button" class="slideshow-prev" aria-label="Previous dataset scene">
+                            <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">
+                                <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" d="M15 5l-7 7 7 7" />
+                            </svg>
+                        </button>
+                        <button type="button" class="slideshow-next" aria-label="Next dataset scene">
+                            <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">
+                                <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="slideshow-status" aria-live="polite"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section results-section" id="results">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered has-text-centered">
+                    <div class="column is-full-width">
+                        <h2 class="title is-3">Results</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container results-carousel-container">
+                <div class="slideshow slideshow-no-swipe slideshow-ride" tabindex="0"
+                    aria-label="Four-way novel-view comparisons">
+                    <div class="slideshow-viewport">
+                        <div class="slideshow-track">
+                            <div class="slideshow-slide">
+                                <div class="video-compare-container video-compare-container--four-way"
+                                    style="background-image: url('static/videos/compare_xld_Town02_4way_poster.jpg?v=2026.10.14.10')"
+                                    data-top-left-label="3DGS" data-top-right-label="DC-Gaussian"
+                                    data-bottom-left-label="RobustSplat" data-bottom-right-label="RIDE-Splat (Ours)">
+                                    <video class="video" id="compare_xld_Town02_four_way" loop playsinline muted preload="none"
+                                        onplay="resizeAndPlayFourWay(this)">
+                                        <source data-src="static/videos/compare_xld_Town02_4way.av1.mp4?v=2026.10.14.10"
+                                            type='video/mp4; codecs="av01.0.16M.08"'>
+                                        <source data-src="static/videos/compare_xld_Town02_4way.mp4?v=2026.10.14.10" type="video/mp4">
+                                    </video>
+                                    <canvas class="videoMerge videoMerge--four-way" id="compare_xld_Town02_four_wayMerge" tabindex="0"
+                                        aria-label="Interactive four-way Town02 video comparison: 3DGS at top left, DC-Gaussian at top right, RobustSplat at bottom left, and RIDE-Splat at bottom right. Move the divider with the pointer or arrow keys. Press Space to pause or play."></canvas>
+                                </div>
+                                <p class="comparison-caption has-text-centered"><strong>Town02</strong> &mdash; XLD [<a
+                                    href="https://3d-aigc.github.io/XLD/" target="_blank"
+                                    rel="noopener noreferrer" aria-label="XLD paper">4</a>].</p>
+                            </div>
+
+                            <div class="slideshow-slide">
+                                <div class="video-compare-container video-compare-container--four-way"
+                                    style="background-image: url('static/videos/compare_wayve_s004_4way_poster.jpg?v=2026.10.14.10')"
+                                    data-top-left-label="3DGS" data-top-right-label="DC-Gaussian"
+                                    data-bottom-left-label="RobustSplat" data-bottom-right-label="RIDE-Splat (Ours)">
+                                    <video class="video" id="compare_wayve_s004_four_way" loop playsinline muted preload="none"
+                                        onplay="resizeAndPlayFourWay(this)">
+                                        <source data-src="static/videos/compare_wayve_s004_4way.av1.mp4?v=2026.10.14.10"
+                                            type='video/mp4; codecs="av01.0.12M.08"'>
+                                        <source data-src="static/videos/compare_wayve_s004_4way.mp4?v=2026.10.14.10" type="video/mp4">
+                                    </video>
+                                    <canvas class="videoMerge videoMerge--four-way" id="compare_wayve_s004_four_wayMerge" tabindex="0"
+                                        aria-label="Interactive four-way Wayve scene 004 video comparison: 3DGS at top left, DC-Gaussian at top right, RobustSplat at bottom left, and RIDE-Splat at bottom right. Move the divider with the pointer or arrow keys. Press Space to pause or play."></canvas>
+                                </div>
+                                <p class="comparison-caption has-text-centered"><strong>scene_004</strong> &mdash; Wayve [<a
+                                    href="https://wayve.ai/labs/wayvescenes101/" target="_blank"
+                                    rel="noopener noreferrer" aria-label="WayveScenes101 paper">5</a>].</p>
+                            </div>
+
+                            <div class="slideshow-slide">
+                                <div class="video-compare-container video-compare-container--four-way"
+                                    style="background-image: url('static/videos/compare_wayve_s005_4way_poster.jpg?v=2026.10.14.10')"
+                                    data-top-left-label="3DGS" data-top-right-label="DC-Gaussian"
+                                    data-bottom-left-label="RobustSplat" data-bottom-right-label="RIDE-Splat (Ours)">
+                                    <video class="video" id="compare_wayve_s005_four_way" loop playsinline muted preload="none"
+                                        onplay="resizeAndPlayFourWay(this)">
+                                        <source data-src="static/videos/compare_wayve_s005_4way.av1.mp4?v=2026.10.14.10"
+                                            type='video/mp4; codecs="av01.0.12M.08"'>
+                                        <source data-src="static/videos/compare_wayve_s005_4way.mp4?v=2026.10.14.10" type="video/mp4">
+                                    </video>
+                                    <canvas class="videoMerge videoMerge--four-way" id="compare_wayve_s005_four_wayMerge" tabindex="0"
+                                        aria-label="Interactive four-way Wayve scene 005 video comparison: 3DGS at top left, DC-Gaussian at top right, RobustSplat at bottom left, and RIDE-Splat at bottom right. Move the divider with the pointer or arrow keys. Press Space to pause or play."></canvas>
+                                </div>
+                                <p class="comparison-caption has-text-centered"><strong>scene_005</strong> &mdash; Wayve [<a
+                                    href="https://wayve.ai/labs/wayvescenes101/" target="_blank"
+                                    rel="noopener noreferrer" aria-label="WayveScenes101 paper">5</a>].</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slideshow-controls">
+                        <button type="button" class="slideshow-prev" aria-label="Previous comparison">
+                            <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">
+                                <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" d="M15 5l-7 7 7 7" />
+                            </svg>
+                        </button>
+                        <button type="button" class="slideshow-next" aria-label="Next comparison">
+                            <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">
+                                <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="slideshow-status" aria-live="polite"></div>
+                </div>
+            </div>
+
+            <div class="container is-max-desktop results-tables-container">
+                <div class="content results-tables">
+                    <figure class="result-table">
+                        <figcaption class="has-text-justified">
+                            TABLE&nbsp;II: <strong>Quantitative results on the RIDE-Splat Dataset, XLD [<a
+                                href="https://3d-aigc.github.io/XLD/" target="_blank"
+                                rel="noopener noreferrer" aria-label="XLD paper">4</a>], and Wayve [<a
+                                href="https://wayve.ai/labs/wayvescenes101/" target="_blank"
+                                rel="noopener noreferrer" aria-label="WayveScenes101 paper">5</a>].</strong>
+                            Metrics are averaged across the evaluated scenes in each dataset, and the best result is bolded.
+                            Because DC-Gaussian [<a href="https://github.com/linhanwang/DC-Gaussian"
+                                target="_blank" rel="noopener noreferrer" aria-label="DC-Gaussian project">2</a>] exhibits substantial underexposure and color shifts, we also report a <em>+ Oracle GT Color Correction</em> variant that applies the released color transform using each test target as reference.
+                            This variant deliberately favors DC-Gaussian and is excluded from bolding. Even so, RIDE-Splat achieves the strongest overall results.
+                        </figcaption>
+                        <picture>
+                            <source srcset="./static/images/main-results-table.webp?v=2026.10.14.10" type="image/webp">
+                            <img src="./static/images/main-results-table.png?v=2026.10.14.10"
+                                width="2915" height="530" decoding="async"
+                                alt="Quantitative comparison of 3DGS, DC-Gaussian, RobustSplat, and RIDE-Splat on the RIDE-Splat Dataset, XLD, and Wayve"
+                                loading="lazy">
+                        </picture>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="BibTeX">
+            <div class="container is-max-desktop content">
+                <h2 class="title is-3">BibTeX</h2>
+                <div class="bibtex-container">
+                    <button class="copy-code-btn" id="copy-btn" aria-label="Copy BibTeX to clipboard">
+                        <i class="fa fa-copy" aria-hidden="true"></i>
+                    </button>
+                    <pre><code id="bibtex-content">@misc{Hayes2026RIDESplat,
+    author = {Hayes, Kevin David and Hanson, Alex and Tu, Allen and Asthana, Pranav and Zwicker, Matthias and Goldstein, Tom},
+    title  = {{RIDE-Splat}: Reflection Removal for In-the-Wild Driving Environments},
+    year   = {2026},
+    url    = {https://ridesplat.github.io/}
+}</code></pre>
+                </div>
+
+                <h2 class="title is-3">Related Work</h2>
+                <p>For additional papers on 3D reconstruction from degraded imagery, see our group’s work below.</p>
+                <ul class="related-list">
+                    <li class="related-item">
+                        <p class="related-title">
+                            <a href="https://splatsure.github.io/" target="_blank" rel="noopener noreferrer">
+                                SplatSuRe: Selective Super-Resolution for Multi-view Consistent 3D Gaussian Splatting</a>
+                        </p>
+                        <p class="related-meta">
+                            <span class="related-venue">CVPR 2026</span>
+                            <a class="related-bibtex" href="https://splatsure.github.io/#BibTeX" target="_blank"
+                                rel="noopener noreferrer" aria-label="BibTeX for SplatSuRe">BibTeX</a>
+                        </p>
+                        Enhance 3D Gaussian Splatting from low-resolution training images by injecting super-resolution
+                        only in regions lacking high-frequency supervision from other views, yielding sharper, more
+                        faithful reconstructions while preserving multi-view consistency.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="content has-text-centered">
+                <a class="icon-link is-placeholder" href="#" aria-disabled="true" tabindex="-1"
+                    title="Paper coming soon" aria-label="Paper coming soon">
+                    <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                </a>
+                <a class="icon-link is-placeholder" href="#" aria-disabled="true" tabindex="-1"
+                    aria-label="arXiv page (coming soon)">
+                    <i class="ai ai-arxiv" aria-hidden="true"></i>
+                </a>
+                <a class="icon-link is-placeholder" href="#" aria-disabled="true" tabindex="-1"
+                    aria-label="Code on GitHub (coming soon)">
+                    <i class="fab fa-github" aria-hidden="true"></i>
+                </a>
+                <a class="icon-link is-placeholder" href="#" aria-disabled="true" tabindex="-1"
+                    title="Dataset release pending" aria-label="Dataset release pending">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-8">
+                    <div class="content footer-acknowledgment">
+                        <p>
+                            This research is based upon work supported by the Office of the Director of National Intelligence (ODNI), Intelligence Advanced Research Projects Activity (IARPA), via IARPA R&amp;D Contract No. 140D0423C0076. The views and conclusions contained herein are those of the authors and should not be interpreted as necessarily representing the official policies or endorsements, either expressed or implied, of the ODNI, IARPA, or the U.S. Government. The U.S. Government is authorized to reproduce and distribute reprints for Governmental purposes notwithstanding any copyright annotation thereon. Commercial support was provided by the Amazon Research Awards program and Open Philanthropy. Further support was provided by the NSF TRAILS Institute (2229885).
+                        </p>
+                    </div>
+                    <div class="content has-text-centered colophon">
+                        <p>
+                            &copy; 2026 <a class="plain-link" href="https://www.umd.edu/" target="_blank" rel="noopener noreferrer">University of Maryland</a>
+                            <span class="colophon-marks">
+                                &middot;
+                                <button type="button" class="colophon-toggle" id="theme-toggle"
+                                    aria-label="Switch to dark mode" aria-pressed="false">
+                                    <span class="theme-icon-wrap">
+                                        <i class="fas fa-sun theme-icon theme-icon-sun" aria-hidden="true"></i>
+                                        <i class="fas fa-moon theme-icon theme-icon-moon" aria-hidden="true"></i>
+                                    </span>
+                                </button>
+                                &middot;
+                                <a href="https://github.com/ridesplat/ridesplat.github.io" target="_blank"
+                                    rel="noopener noreferrer" aria-label="Website source code">
+                                    <i class="fas fa-code" aria-hidden="true"></i>
+                                </a>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

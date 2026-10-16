@@ -1,0 +1,557 @@
+/* ---- Light and dark themes ----
+ *
+ * Same machinery as the reference implementation: an inline script in <head> stamps
+ * `data-theme` on <html> from localStorage before first paint, a footer toggle
+ * flips it, and every colour on the page resolves through a custom property so the
+ * switch is one attribute change rather than a cascade of overrides.
+ *
+ * Light is the default and is unchanged from what the pages shipped before — the
+ * tokens below simply name the values that were already hardcoded. Dark is a real
+ * palette, not an inversion: inverting a page turns drop shadows into glows and
+ * makes the CVPR blue vibrate against a dark field.
+ *
+ * The page is pure black, matching the reference implementation. The text stops just short of pure
+ * white at #f7f9fb — 19.90:1 against the 21:1 of the pure pair, a difference no reader
+ * can see, but enough of a step back to keep thin type from haloing on an OLED screen.
+ * (the reference implementation itself uses #e6edf3 for the same reason, which is dimmer still at 17.77:1.)
+ * Panel surfaces sit above the page rather than below it — #121212 footer, #141414 code
+ * blocks, #1e1e1e chips — and are neutral rather than blue-tinted, so they read as the
+ * black page lifted a step instead of as a different material. Every measurement below
+ * is quoted against the surface the text actually sits on.
+ *
+ * Body copy and headings share one value. In light mode they are deliberately split —
+ * #4a4a4a body against #000 headings — because near-black body text on white is
+ * fatiguing over a long abstract. That reasoning does not carry over: on a dark ground
+ * the light-on-dark polarity already softens the type, so the split only made the body
+ * look recessive next to its own headings. Hierarchy is carried by size and weight
+ * instead, which is where it belongs.
+ *
+ *   --text / --text-heading  #f7f9fb on #000000 = 19.90:1   (body copy and headings)
+ *   --text-muted             #a6b0bb on #000000 =  9.55:1   (captions, notes)
+ *   --link                   #6cb6ff on #000000 =  9.77:1   (CVPR blue, lightened)
+ *   --link on the footer     #6cb6ff on #121212 =  8.72:1
+ *
+ * All far past the 4.5:1 WCAG AA asks of body text — 19.90:1 is more than twice the
+ * light theme's own body contrast of 8.86:1, so nothing here is dim. The link blue is
+ * lightened rather than kept at rgb(4,118,208), which measures 4.51:1 against pure black
+ * and so fails AA; it is the same hue family, so the pages still read as "CVPR blue
+ * links", just at a luminance that works on a dark surface.
+ */
+
+:root,
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-alt: #fafafa;
+  /* footer */
+  --bg-code: #f5f5f5;
+  /* BibTeX block, inline code */
+  --bg-chip: #f0f0f0;
+  /* venue badge */
+
+  --text: #4a4a4a;
+  --text-heading: #000000;
+  --text-hover: #363636;
+  --text-muted: #555555;
+  --text-quiet: #595959;
+
+  --link: rgb(4, 118, 208);
+  --link-hover: rgb(3, 90, 160);
+  --link-footer: #0471c8;
+
+  --border: #858585;
+  --border-hover: #6b6b6b;
+  --btn-bg: #000000;
+  --btn-bg-hover: #222222;
+  --btn-text: #ffffff;
+
+  --dot: #8f8f8f;
+  --dot-hover: #6b6b6b;
+  --dot-active: #363636;
+  --arrow: #363636;
+
+  --shadow: rgba(0, 0, 0, 0.14);
+  --shadow-raised: rgba(0, 0, 0, 0.2);
+  --shadow-btn: rgba(0, 0, 0, 0.22);
+  --shadow-btn-active: rgba(0, 0, 0, 0.18);
+  --shadow-glow: rgba(0, 0, 0, 0.28);
+
+  --copied: #257953;
+}
+
+[data-theme="dark"] {
+  --bg: #000000;
+  /* Neutral greys, not GitHub's blue-tinted #161b22: against a pure-black page that
+     tint read as a distinctly blue panel rather than as the page lifted slightly. */
+  --bg-alt: #121212;
+  --bg-code: #141414;
+  --bg-chip: #1e1e1e;
+
+  /* Body and headings share one value in dark. In light they are split — #4a4a4a body
+     against #000 headings — because near-black body text on white is tiring over a long
+     abstract; on a dark ground the light-on-dark polarity already softens the type, so
+     the split only made the body look recessive next to its own headings. */
+  --text: #f7f9fb;
+  --text-heading: #f7f9fb;
+  --text-hover: #f7f9fb;
+  --text-muted: #a6b0bb;
+  --text-quiet: #a6b0bb;
+
+  --link: #6cb6ff;
+  --link-hover: #a5d2ff;
+  --link-footer: #6cb6ff;
+
+  --border: #6b6b6b;
+  --border-hover: #9a9a9a;
+  --btn-bg: #1e1e1e;
+  --btn-bg-hover: #2c2c2c;
+  /* White, matching light mode. A control's label should not be dimmer than the prose
+     around it, and #e6edf3 — a leftover from an earlier palette draft that the page text
+     moved on from — was. 16.67:1 on the pill. The halation reason for keeping body copy
+     just short of white does not apply to a few short labels on a mid-grey pill. */
+  --btn-text: #ffffff;
+
+  --dot: #6e7681;
+  --dot-hover: #9aa4af;
+  /* The active dot is the brightest mark in the control, so it takes white too: it has
+     to separate from the inactive #6e7681 (4.59:1 between them, up from 3.89:1). */
+  --dot-active: #ffffff;
+  --arrow: #c9d1d9;
+
+  /* A soft drop shadow is nearly invisible against a dark page, so these are
+     deepened rather than lightened — enough to keep the rounded media reading as a
+     raised surface without turning into a halo. The active carousel slide still gets
+     the deeper of the two, so the selection cue survives the theme switch. */
+  --shadow: rgba(0, 0, 0, 0.6);
+  --shadow-raised: rgba(0, 0, 0, 0.75);
+  --shadow-btn: rgba(0, 0, 0, 0.6);
+  --shadow-btn-active: rgba(0, 0, 0, 0.5);
+  --shadow-glow: rgba(0, 0, 0, 0.7);
+
+  --copied: #56d364;
+}
+
+/* ---- Applying the tokens ----
+ * Bulma hardcodes its colours, so each of these re-points one of its rules at a
+ * token. In light mode every value below resolves to exactly what Bulma or the
+ * page already used, so this section is a no-op until `data-theme="dark"` is set. */
+
+html,
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.title,
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.publication-title,
+.publication-venue,
+.publication-authors {
+  color: var(--text-heading);
+}
+
+/* Bold is just bold: weight carries the emphasis, and the colour comes from whatever
+   text surrounds it. Bulma sets `strong { color: #363636 }` while leaving `<b>` to
+   inherit the body colour, so the two rendered as different shades of bold — and
+   #363636 is a third value matching neither the body (#4a4a4a) nor the headings (#000).
+   Inheriting instead removes the discrepancy in both themes and means a bold inside a
+   caption takes the caption's colour rather than jumping out of it.
+
+   Not scoped to `.content`: several captions on these pages sit in a <figure> with no
+   `.content` wrapper, and a bold in one of those kept Bulma's near-black — 1.74:1 once
+   the page went dark. */
+strong,
+b {
+  color: inherit;
+}
+
+/* The one exception. These legend chips keep their pale fills in both themes because
+   the colours have to match the table they describe, so their text cannot inherit — it
+   would go light in dark mode and vanish against the chip. */
+.swatch,
+.swatch strong,
+.swatch b,
+.highlight-purple,
+.highlight-blue,
+.highlight-yellow {
+  color: #363636;
+}
+
+/* `.results-note` is deliberately absent: it is a <p> that inherits the body colour,
+   and grouping it here lightened it from #4a4a4a to #555 in light mode. */
+figcaption,
+.table-note,
+.table-caption {
+  color: var(--text-muted);
+}
+
+.footer {
+  background-color: var(--bg-alt);
+}
+
+a {
+  color: var(--link);
+}
+
+a:hover {
+  color: var(--link-hover);
+}
+
+.footer a:not(.icon-link) {
+  color: var(--link-footer);
+}
+
+.footer a:not(.icon-link):hover {
+  color: var(--link-hover);
+}
+
+/* The footer glyph row is ink-coloured rather than link-coloured — they read as a
+   row of marks, not prose. */
+.footer .icon-link,
+.footer .icon-link:hover {
+  color: var(--text-heading);
+}
+
+.publication-authors a:not(.plain-link) {
+  color: var(--link) !important;
+}
+
+/* ---- Links that are not meant to look like links ----
+ *
+ * The institution and venue lines, and the colophon's copyright holder, are now
+ * anchors so the institution and conference can be reached — but they are headings and
+ * running text, not prose links, and colouring them would turn the affiliation line
+ * into a row of blue and pull the eye off the author names above it. So they inherit
+ * the colour of the text they sit in and are given a hover underline in that same
+ * colour, which is the only resting-state-preserving cue available: at rest they are
+ * pixel-for-pixel what they were before.
+ *
+ * The `.publication-authors a` rules — in this file and again in index.css, which loads
+ * later — both carry `!important`, so neither specificity nor order could beat them
+ * from here; they each exclude `.plain-link` instead. The `!important` below is for the
+ * blanket `a { color: var(--link) }` and `.footer a:not(.icon-link)` rules, which have
+ * no such carve-out.
+ */
+a.plain-link,
+a.plain-link:hover,
+a.plain-link:focus {
+  color: inherit !important;
+}
+
+/* Publication link pills. */
+.button.is-dark {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+.button.is-dark:hover {
+  background-color: var(--btn-bg-hover);
+  color: var(--btn-text);
+}
+
+/* BibTeX block and its copy button.
+ *
+ * Only the container paints the surface. `pre` and `code` sit inside it and used to
+ * paint `--bg-code` as well, so a theme toggle ran three nested background-color
+ * transitions over the same 0.3s — and on a throttled mobile frame they could finish
+ * out of step, leaving the block visibly mismatched or stuck at the old colour.
+ * Transparent children cannot disagree with their parent. */
+.bibtex-container {
+  background-color: var(--bg-code);
+}
+
+pre,
+code {
+  background-color: transparent;
+  color: var(--text);
+}
+
+.copy-code-btn {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-quiet);
+}
+
+.copy-code-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-hover);
+}
+
+.copy-code-btn.copied {
+  color: var(--copied);
+  border-color: var(--copied);
+}
+
+/* Related work entries. */
+.related-venue {
+  color: var(--text-quiet);
+  background: var(--bg-chip);
+}
+
+.related-bibtex {
+  color: var(--text-quiet);
+}
+
+.related-bibtex:hover {
+  color: var(--text-hover);
+}
+
+/* Media surfaces. Deliberately excludes `.paper-figure` and the other diagrams lifted
+   from the paper: those sit on their own white ground, where a raised surface outlines
+   the whitespace rather than the content. Light mode never shadowed them and must not
+   start. */
+#teaser,
+.results-grid video,
+.publication-video,
+.video-compare-container,
+.bal-container-small,
+.slideshow-slide > img,
+.slideshow-slide > picture > img,
+.slideshow-slide > video,
+.slideshow-no-swipe .video-compare-container {
+  box-shadow: 0 4px 16px var(--shadow);
+}
+
+.slideshow-slide.is-active > img,
+.slideshow-slide.is-active > picture > img,
+.slideshow-slide.is-active > video,
+.slideshow-no-swipe .slideshow-slide.is-active .video-compare-container,
+.slideshow-slide.is-active .bal-container-small {
+  box-shadow: 0 8px 28px var(--shadow-raised);
+}
+
+/* ---- White-background paper figures in dark mode ----
+ *
+ * The plots and tables lifted from the paper have a white background baked into the
+ * image. On a dark page they become bright rectangles, and worse, their black text now
+ * has to be read out of a glowing panel — the figure fights the page instead of sitting
+ * in it.
+ *
+ * Rather than invert them — which would wreck the colour-coded table cells and the
+ * green/red highlight swatches that carry meaning — they are set on a light card with
+ * a little padding, so the white reads as a sheet of paper laid on the dark page. That
+ * is how the figure appears in the PDF anyway.
+ *
+ * `filter: brightness()` was the alternative and is worse: it dims the white to match
+ * the page but drags every hue with it, so the swatches shift.
+ */
+[data-theme="dark"] .paper-figure,
+[data-theme="dark"] .table-iv-image,
+[data-theme="dark"] .figure-centered img,
+[data-theme="dark"] .figure-full {
+  background: #ffffff;
+  padding: 0.75rem;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+/* Carousel controls. */
+.slideshow-prev,
+.slideshow-next {
+  color: var(--arrow);
+}
+
+.slideshow-dot {
+  background: var(--dot);
+}
+
+.slideshow-dot:hover {
+  background: var(--dot-hover);
+}
+
+.slideshow-dot.is-active {
+  background: var(--dot-active);
+}
+
+/* ---- Colophon: copyright, theme toggle, source link ----
+ *
+ * One line of prose rather than a row of 44px glyph cells, so the toggle and the
+ * source icon are sized and coloured to sit *in* the sentence beside the copyright.
+ * The two `&middot;` separators are literal text in the markup — they are punctuation
+ * between three peers, not decoration, so they belong in the content.
+ */
+.colophon p {
+  /* The glyphs are `1em` boxes on the text baseline; a slightly open line-height keeps
+     the sun's descender clear of the text below when the line wraps on a phone. */
+  line-height: 1.6;
+}
+
+/* Keeps the two separators welded to the glyphs they divide, so a narrow screen breaks
+   *before* the group rather than inside it. transfira's holder — "Systems and Technology
+   Research" — is long enough to wrap at 390px, and without this the line ended on a
+   dangling middot with the source glyph orphaned on the line below. */
+.colophon-marks {
+  white-space: nowrap;
+}
+
+/* Ink-coloured, like the glyph row above and unlike the footer's prose links: these
+   read as marks rather than as words. The `.footer` prefix is load-bearing —
+   `.footer a:not(.icon-link)` above is (0,2,1) and would otherwise win over a bare
+   `.colophon a` at (0,1,1), leaving the source glyph link-blue while the copyright
+   and the toggle beside it were ink. */
+.footer .colophon a:not(.plain-link),
+.footer .colophon a:not(.plain-link):hover,
+.footer .colophon .colophon-toggle {
+  color: var(--text-heading);
+}
+
+/* Bulma styles the bare `button` element like a form control — white fill, 1px
+   border, 4px radius, its own padding and 2.5em height. The toggle is a button for
+   semantics only; visually it is a glyph in a sentence, so all of that is undone
+   here rather than reaching for a different element. */
+.colophon-toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  height: auto;
+  cursor: pointer;
+  /* Inline, so it sits in the line of text between the two separators. `font-size`
+     and `line-height` are inherited rather than set: the glyph then matches the
+     copyright beside it at every breakpoint, instead of being pinned to the 25px the
+     44px icon row used. Bulma's `button` sets both, hence the explicit inherit. */
+  display: inline;
+  font-size: inherit;
+  line-height: inherit;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+
+.colophon-toggle:hover,
+.colophon-toggle:focus {
+  background: none;
+  border: none;
+}
+
+/* A one-em window with `overflow: hidden`, so the outgoing glyph sets below the sill
+   as the incoming one rises. Same gesture as the reference implementation's. `-0.125em` is the reference implementation's own
+   offset for this wrapper in a line of text — it centres the box on the lowercase
+   x-height rather than leaving it on the baseline, which is right here now that the
+   toggle is inline prose rather than a cell in a glyph row. */
+.theme-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -0.125em;
+  position: relative;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+}
+
+.theme-icon {
+  position: absolute;
+  left: 0;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+/* Light: the sun is up. Hovering sets it and raises the moon, previewing the switch. */
+.theme-icon-sun {
+  top: 0;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.theme-icon-moon {
+  top: 0;
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+#theme-toggle:hover .theme-icon-sun {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+#theme-toggle:hover .theme-icon-moon {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Dark: the moon is up, and the same gesture runs in reverse. */
+[data-theme="dark"] .theme-icon-sun {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+[data-theme="dark"] .theme-icon-moon {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+[data-theme="dark"] #theme-toggle:hover .theme-icon-sun {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+[data-theme="dark"] #theme-toggle:hover .theme-icon-moon {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+/* The colour swap itself is eased so flipping the theme is not a hard cut. Scoped to
+   the properties that actually change; transitioning `all` here would drag the
+   carousel transform through it. */
+/* ---- Easing the switch ----
+ *
+ * Every element that changes colour eases rather than snapping, so flipping the theme
+ * reads as the page dimming rather than as a jump cut.
+ *
+ * The property list is explicit and short on purpose. `transition: all` would drag the
+ * carousel's transform, the slide scale and the hover lifts through the same 0.3s, so
+ * a theme switch mid-drag would fight the pointer. Only the four colour-ish properties
+ * are animated, and `box-shadow` is included because the media shadows deepen in dark.
+ *
+ * Applied via a class the switcher adds on the first toggle, not on load: a page that
+ * arrives already dark should paint dark, not fade into it. */
+.theme-anim,
+.theme-anim body,
+.theme-anim .footer,
+.theme-anim .publication-venue,
+.theme-anim .publication-authors,
+.theme-anim .title,
+.theme-anim .content h1,
+.theme-anim .content h2,
+.theme-anim .content h3,
+.theme-anim .content h4,
+.theme-anim p,
+.theme-anim li,
+.theme-anim strong,
+.theme-anim b,
+.theme-anim figcaption,
+.theme-anim a,
+.theme-anim .button,
+.theme-anim .bibtex-container,
+.theme-anim .copy-code-btn,
+.theme-anim .related-venue,
+.theme-anim .paper-figure,
+.theme-anim .table-iv-image,
+.theme-anim .figure-full,
+.theme-anim .figure-centered img,
+.theme-anim #teaser,
+.theme-anim .publication-video,
+.theme-anim .video-compare-container,
+.theme-anim .bal-container-small,
+.theme-anim .slideshow-dot,
+.theme-anim .slideshow-prev,
+.theme-anim .slideshow-next {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  /* `!important` is load-bearing: `.theme-anim *` is (0,1,0) and loses to the
+     `.theme-anim body` / `.theme-anim .footer` selectors above at (0,2,0), so without
+     it 23 of 27 themed elements kept their 0.3s transition for reduced-motion users. */
+  .theme-anim,
+  .theme-anim *,
+  .theme-icon {
+    transition: none !important;
+  }
+}

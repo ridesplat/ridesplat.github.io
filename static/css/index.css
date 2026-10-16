@@ -1,0 +1,683 @@
+/* RIDE-Splat — page-specific styles.
+ *
+ * Layout/grid come from the purged Bulma subset (bulma.min.css); icons from
+ * icons.css; the results carousel from slideshow.css; and the PDF viewer from
+ * pdf-modal.css. This file holds only what is particular to this page: the
+ * teaser comparison slider, the before/after image sliders, and the hero text.
+ *
+ * Headings fall back to the self-hosted Noto Sans while Google Sans loads
+ * asynchronously, so the async swap is a font change rather than invisible text.
+ */
+
+body {
+  font-family: 'Noto Sans', sans-serif;
+}
+
+/* ---- Reducing the heading reflow ----
+ *
+ * Google Sans is proprietary, so it cannot be self-hosted and has to arrive from
+ * Google's CDN after first paint. Headings therefore render once in the fallback
+ * and again in Google Sans, and because the two have different metrics the title
+ * re-wrapped — "Pruning" jumped up a line as it swapped.
+ *
+ * This is a metrics-matched fallback: Noto Sans is ~4% wider per character than
+ * Google Sans at the same size, so nudging it down closes most of the gap and the
+ * swap becomes a change of shape rather than a change of layout. Google Sans
+ * itself is unaffected; this face is only ever used while it is in flight.
+ */
+@font-face {
+  font-family: 'Google Sans Fallback';
+  src: local('Noto Sans'), local('Helvetica Neue'), local('Arial');
+  size-adjust: 96%;
+  ascent-override: 95%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
+/* Keeps a phrase from being split across lines — but only where the phrase can
+   actually fit. Below ~360px a long method name is wider than the viewport even at
+   the clamped title size, and an unbreakable span that wide forces the whole page
+   to scroll sideways. A very small screen gets a mid-phrase break instead, which is
+   the lesser problem. */
+.nowrap {
+  white-space: nowrap;
+}
+
+/* `em`, not `px`, and deliberately generous. The span overflows when its width — which
+   scales with the *text size* — exceeds its column, which scales with the viewport. A px
+   bound therefore covers only one of the two variables: at 200% text the phrase doubles
+   while the column does not, so a 500px window failed where 320px passed, and the excess
+   was clipped unreachably by Bulma's `html { overflow-x: hidden }`. An `em` bound tracks
+   the root font size, so it widens exactly as the text does: 640px at the default size,
+   1280px at 200%. Above it the phrase always fits. */
+@media screen and (max-width: 40em) {
+  .nowrap {
+    white-space: normal;
+  }
+}
+
+/* ---- Comparison slider (canvas, driven by video_comparison.js) ---- */
+
+.video-compare-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+  display: block;
+  line-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px var(--shadow);
+}
+
+.videoMerge {
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  display: block;
+  margin: 0 auto;
+  background-size: cover;
+}
+
+.videoMerge--four-way {
+  cursor: move;
+}
+
+.videoMerge:focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: -3px;
+}
+
+/* The packed videos are frame sources for the canvas only. Absolutely positioning
+   and hiding every source prevents native video boxes from leaking into the page,
+   while keeping the elements displayed lets browsers decode them for drawImage(). */
+.video-compare-container > video {
+  position: absolute !important;
+  inset: 0 auto auto 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* ---- Hero / teaser ---- */
+
+.footer .icon-link {
+  font-size: 25px;
+  color: var(--text-heading);
+}
+
+.link-block a {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+/* The publication link buttons are `nowrap` pills in an inline row. At large text sizes a
+   single pill can be wider than its column, and because the row is plain inline flow with
+   `overflow: visible` the excess is clipped by `html { overflow-x: hidden }` rather than
+   wrapping or scrolling — buttons a 200% reader cannot reach. Flexing the row lets the
+   pills wrap onto more lines, and letting a label break is the lesser evil against losing
+   the button entirely. */
+.publication-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.publication-links .button {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.hero-teaser {
+  font-family: 'Google Sans', 'Google Sans Fallback', 'Noto Sans', sans-serif;
+}
+
+.publication-title {
+  color: var(--text-heading);
+  margin-top: -20px;
+  font-family: 'Google Sans', 'Google Sans Fallback', 'Noto Sans', sans-serif;
+}
+
+.publication-authors {
+  color: var(--text-heading);
+  font-family: 'Google Sans', 'Google Sans Fallback', 'Noto Sans', sans-serif;
+}
+
+/* Author names are link-coloured; the affiliation line beneath them is not. Both live
+   in `.publication-authors`, so the institution links carry `.plain-link` and are
+   excluded here — see the note in theme.css. */
+.publication-authors a:not(.plain-link) {
+  color: var(--link) !important;
+}
+
+.publication-venue {
+  color: var(--text-heading);
+  font-weight: bold;
+}
+
+.author-block {
+  display: inline-block;
+}
+
+/* The "* denotes equal contribution" line, tucked under the author list. Bulma's
+   .columns carries a bottom margin that left a visible gap between the two; this
+   pulls it closed. Was an inline `margin-bottom: -5px`.
+
+   The selector has to include `.columns` to outrank
+   `.columns:not(:last-child){margin-bottom:calc(1.5rem - .75rem)}` — one class loses
+   to two, so as a bare `.author-note` this kept Bulma's 12px and the gap it was
+   written to close stayed open. */
+.columns.author-note {
+  margin-bottom: -5px;
+}
+
+/* The embedded talk gets the same raised surface as the other media on the page,
+   so the player reads as an inset object rather than a hole cut in the layout.
+   The shadow sits on this wrapper, not the <iframe>: `overflow: hidden` is what
+   clips the player to the rounded corners and would clip a child's shadow, but an
+   element's own shadow still paints outside its clip. */
+.publication-video {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+  overflow: hidden;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 16px var(--shadow);
+}
+
+.publication-video iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Before/after image sliders (driven by script.js) ---- */
+
+.bal-container-small {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: 400px;
+  cursor: grab;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px var(--shadow);
+  margin: 0 auto 2rem auto;
+}
+
+.bal-after {
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.bal-before {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 15;
+  overflow: hidden;
+}
+
+.bal-before-inset {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.bal-after img,
+.bal-before img {
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-position: 50% 50%;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.bal-beforePosition {
+  background: #121212;
+  color: #fff;
+  left: 0;
+  pointer-events: none;
+  border-radius: 0.2rem;
+  padding: 2px 10px;
+}
+
+.bal-afterPosition {
+  background: #121212;
+  color: #fff;
+  right: 0;
+  pointer-events: none;
+  border-radius: 0.2rem;
+  padding: 2px 10px;
+}
+
+.beforeLabel,
+.afterLabel {
+  position: absolute;
+  bottom: 0;
+  margin: 1rem;
+  font-size: 1em;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.bal-handle {
+  height: 41px;
+  width: 41px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -20px;
+  margin-top: -21px;
+  border: 2px solid #fff;
+  border-radius: 1000px;
+  z-index: 20;
+  pointer-events: none;
+  box-shadow: 0 0 10px rgb(12, 12, 12);
+}
+
+.handle-left-arrow,
+.handle-right-arrow {
+  width: 0;
+  height: 0;
+  border: 6px inset transparent;
+  position: absolute;
+  top: 50%;
+  margin-top: -6px;
+}
+
+.handle-left-arrow {
+  border-right: 6px solid #fff;
+  left: 50%;
+  margin-left: -17px;
+}
+
+.handle-right-arrow {
+  border-left: 6px solid #fff;
+  right: 50%;
+  margin-right: -17px;
+}
+
+.bal-handle::before {
+  bottom: 50%;
+  margin-bottom: 20px;
+  box-shadow: 0 0 10px rgb(12, 12, 12);
+}
+
+.bal-handle::after {
+  top: 50%;
+  margin-top: 20.5px;
+  box-shadow: 0 0 5px rgb(12, 12, 12);
+}
+
+.bal-handle::before,
+.bal-handle::after {
+  content: " ";
+  display: block;
+  width: 2px;
+  background: #fff;
+  height: 9999px;
+  position: absolute;
+  left: 50%;
+  margin-left: -1.5px;
+}
+
+/* Only the canvas is meant to be visible; the <video> is just the frame source.
+   resizeAndPlay() sets height:0 on it, but an `aspect-ratio` on the same element
+   re-derives a height from its width and wins, leaving a white band above the
+   canvas inside the rounded container. Collapse it here instead, and let the
+   canvas carry the ratio that reserves space before JS sizes it. */
+.video-compare-container video.video {
+  display: block;
+  width: 100%;
+  height: 0;
+}
+
+/* The source is a side-by-side pair, so the visible half is 16:9. Without this
+   the canvas holds its default 300x150 ratio until the slider initialises. */
+.video-compare-container canvas.videoMerge {
+  aspect-ratio: 16 / 9;
+}
+
+/* ---- Related work ----
+   Was an <ol> whose items ran title, "(conference version)", "[BibTeX]" and the description
+   together as one inline paragraph. The numbering implied a ranking that isn't
+   there, and the bracketed metadata competed with the title. Each entry now has a
+   title line above its description, with the venue as a quiet badge. */
+
+.related-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.related-item + .related-item {
+  margin-top: 1.5rem;
+}
+
+.related-title {
+  margin-bottom: 0.2rem !important;
+}
+/* Venue and BibTeX sit on their own line under the title, so a long paper name
+   never has to share a baseline with them. */
+.related-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem !important;
+}
+
+.related-title > a:first-child {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--link);
+}
+
+/* Metadata, not a heading: sized and coloured to sit behind the title. */
+.related-venue {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+  background-color: var(--bg-chip);
+  border-radius: 999px;
+  padding: 0.15em 0.6em;
+  white-space: nowrap;
+}
+
+/* A quiet secondary action. The underline appears on hover so the link is
+   discoverable without shouting on every entry. */
+.related-bibtex {
+  font-size: 0.82rem;
+  color: var(--text-quiet);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.related-bibtex:hover {
+  color: var(--text-hover);
+  border-bottom-color: #b5b5b5;
+}
+
+/* ---- BibTeX block ----
+   Was a long inline style attribute on both the container and its button. */
+
+.bibtex-container {
+  position: relative;
+  background-color: var(--bg-code);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.copy-code-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background-color: var(--bg);
+  /* Was #e5e5e5, 1.26:1 against the button's own white fill — a control boundary
+     WCAG 1.4.11 asks to reach 3:1. The measurement that matters is against the
+     #f5f5f5 code block the button sits on, not its own fill: #8f8f8f gave 3.23:1
+     inward but only 2.97:1 outward, so #858585 is used instead — 3.45:1 and 3.17:1,
+     clearing 3:1 on both edges while still reading as quiet chrome. */
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-quiet);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover used to lighten the border to #b5b5b5 — 2.05:1, less visible than at rest,
+   so the feedback made the control harder to see. Darker instead. */
+.copy-code-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-hover);
+}
+
+.copy-code-btn.copied {
+  color: var(--copied);
+  border-color: var(--copied);
+}
+
+@media screen and (max-width: 768px) {
+  .video-compare-container {
+    width: calc(100% - 1.5rem);
+  }
+
+  .bal-container-small {
+    height: auto;
+    aspect-ratio: 3/2;
+  }
+
+  #example1 {
+    aspect-ratio: 16/9;
+  }
+
+  /* Bulma pins .title.is-1 at a flat 3rem, which a long paper title cannot fit
+     on a phone — it overflowed the viewport and forced the whole page sideways.
+     Scale with the viewport instead, with a floor so it stays a title. */
+  .publication-title.is-1 {
+    font-size: clamp(1.6rem, 7.2vw, 3rem);
+  }
+
+  .is-size-3 {
+    font-size: 1.4rem !important;
+  }
+
+  .is-size-5 {
+    font-size: 1rem !important;
+  }
+}
+
+/* ---- Captions under comparison sliders and dataset clips ----
+   These sit outside a .content wrapper, so minireset's `p{margin:0}` is the only rule that reaches
+   them: without this the caption touches the video above it and the next clip starts immediately
+   below, running the whole section into one block. */
+.comparison-caption {
+  margin: 0.6rem auto 2.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-muted, #6b7280);
+}
+
+.comparison-caption:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- Public paper-page layout ---- */
+
+.publication-title {
+  line-height: 1.12;
+}
+
+.is-placeholder {
+  cursor: not-allowed;
+  opacity: 0.58;
+  pointer-events: none;
+}
+
+.teaser-wide-container {
+  width: calc(100% - 3rem);
+  max-width: 1200px;
+}
+
+.section-copy {
+  max-width: 920px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.paper-figure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 1.25rem;
+}
+
+.figure-wide {
+  width: 100%;
+}
+
+.dataset-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px var(--shadow);
+  cursor: default;
+}
+
+.dataset-video:focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: 3px;
+}
+
+.dataset-heading {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dataset-heading .title {
+  margin-bottom: 0;
+}
+
+.dataset-heading-download {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--text-heading);
+  background: transparent;
+  color: var(--text-heading);
+  box-shadow: none;
+  justify-self: end;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dataset-heading-download:hover,
+.dataset-heading-download:focus-visible {
+  border-color: var(--text-heading);
+  background-color: var(--text-heading);
+  color: var(--bg);
+  box-shadow: 0 2px 8px var(--shadow-btn);
+}
+
+.slideshow-dataset {
+  margin-top: 1.5rem;
+}
+
+.slideshow-dataset .slideshow-slide > video {
+  aspect-ratio: 160 / 43;
+}
+
+.slideshow-dataset .comparison-caption {
+  margin-bottom: 0;
+}
+
+.slideshow-dataset .slideshow-track.is-draggable,
+.slideshow-dataset .slideshow-track.is-draggable:active,
+.slideshow-dataset .slideshow-slide,
+.slideshow-dataset .slideshow-slide.is-active,
+.slideshow-dataset .dataset-video {
+  cursor: default;
+}
+
+.results-carousel-container {
+  margin-top: 0.75rem;
+}
+
+.slideshow-ride .video-compare-container {
+  width: 100%;
+  background-position: center;
+  background-size: cover;
+}
+
+.results-tables-container {
+  margin-top: 3rem;
+}
+
+.results-tables figure.result-table {
+  margin-right: 0;
+  margin-left: 0;
+  text-align: center;
+}
+
+.results-tables .result-table img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  background: #ffffff;
+}
+
+.results-tables .result-table figcaption {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+[data-theme="dark"] .results-tables .result-table img {
+  padding: 0.75rem;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+@media screen and (min-width: 769px) {
+  .slideshow-dataset,
+  .slideshow-ride {
+    --slideshow-slide-w: min(900px, 78%);
+  }
+}
+
+.footer-acknowledgment {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: justify;
+}
+
+@media screen and (max-width: 768px) {
+  .teaser-wide-container {
+    width: 100%;
+  }
+}

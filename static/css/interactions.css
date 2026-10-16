@@ -1,0 +1,202 @@
+/* ---- Hover and focus polish ----
+ *
+ * The same micro-interactions as the reference implementation, retuned for these pages'
+ * palette: the personal site works in a red accent, while the project pages are
+ * dark-neutral (#363636 buttons) with CVPR blue links, so the fills and glows
+ * follow those instead of introducing a new colour.
+ *
+ * Three effects, all pure CSS:
+ *   1. Buttons fill with their border colour and lift on a soft shadow.
+ *   2. Inline text links grow an underline left-to-right on hover and on keyboard
+ *      focus, drawn in currentColor so it tracks the text.
+ *   3. Footer icons lift with a subtle glow.
+ *
+ * Everything is disabled under `prefers-reduced-motion`, and every hover rule is
+ * withdrawn on touch devices via `@media (hover: none)` — otherwise a tap leaves
+ * the :hover state stuck on until the next tap elsewhere.
+ */
+
+/* ---- 1. Buttons ---- */
+
+/* The publication links (Paper, arXiv, Poster, Video, Code) are Bulma
+   `.button.is-dark` pills. Bulma already darkens them on hover; this adds the
+   lift and the shadow, and makes the transition explicit so it eases both ways. */
+.publication-links .button,
+.link-block .button {
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.publication-links .button:hover,
+.link-block .button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-btn);
+}
+
+.publication-links .button:active,
+.link-block .button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px var(--shadow-btn-active);
+}
+
+/* Keyboard focus gets a visible ring; `:focus-visible` keeps it off mouse clicks.
+   The ring is the link blue rather than #363636: a dark ring around a dark #363636
+   pill separated by 3px of white reads as a blurry double edge, not a ring. */
+.publication-links .button:focus-visible,
+.link-block .button:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+}
+
+/* Bulma ships `.button:focus{box-shadow:...}` on plain `:focus`, so it stacks a
+   grey halo under the ring above — and because it is not `:focus-visible`, the halo
+   stayed on a button after a mouse click. */
+.button:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+/* Everything else interactive gets the same ring. Previously only the pill buttons
+   and the carousel controls had one; the footer links, copy button and prose links
+   fell through to whatever the browser drew, or nothing.
+
+   `figcaption a` is listed on its own as well as inside the `.content` group: on
+   speede3dgs the table caption's reference links sit in a `<figure>` that is not
+   inside a `.content` div, so the grouped selector missed them. Likewise a bare
+   `.content a` catches links that are direct children of `.content` with no
+   paragraph wrapper, as in sibling project's Related Work. */
+.footer .icon-link:focus-visible,
+.footer .colophon .colophon-toggle:focus-visible,
+.copy-code-btn:focus-visible,
+.content a:focus-visible,
+figcaption a:focus-visible,
+.publication-authors a:focus-visible,
+.related-item a:focus-visible,
+a.plain-link:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* The embedded talk is a tab stop — a 763x429 region a keyboard user can land on —
+   but no rule gave it a ring, so focus was completely invisible there. The offset is
+   negative so the ring draws inside the rounded, clipped wrapper instead of being
+   cut off by its `overflow: hidden`. */
+.publication-video iframe:focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: -3px;
+}
+
+/* Press feedback on the copy button, which had none. */
+.copy-code-btn:active {
+  transform: translateY(1px);
+}
+
+/* ---- 2. Inline text links ----
+ *
+ * A background gradient standing in for an underline, grown from 0% to 100% width.
+ * `text-decoration` cannot be animated and a border-bottom would move the line box;
+ * this does neither. Scoped to prose so it never touches the pill buttons, the icon
+ * links, or a link wrapping an image. */
+.content:not(.colophon) :is(p, li, figcaption) a:not(.button):not(.icon-link),
+.publication-authors a,
+.related-item a:not(.related-bibtex),
+a.plain-link {
+  /* Underline on hover only — a resting underline on every link read as cluttered
+     against this much prose. An accessibility note: WCAG 1.4.1 asks for 3:1 between
+     link and body text where colour is the sole resting cue, and CVPR blue against
+     #4a4a4a is 1.90:1. The mitigation here is that these links are almost always
+     author names, venue names or paper titles, i.e. identifiable by content and
+     position rather than by colour alone, and the underline appears on both hover
+     and keyboard focus.
+
+     `.plain-link` inherits its text colour, so `currentColor` here resolves to whatever
+     it sits in — black on the affiliation and venue lines, #4a4a4a in the colophon,
+     #f7f9fb in dark mode — and the underline matches without a single hardcoded value
+     or a per-context override. */
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1.5px;
+  transition: background-size 0.3s ease, color 0.2s ease;
+}
+
+.content:not(.colophon) :is(p, li, figcaption) a:not(.button):not(.icon-link):hover,
+.content:not(.colophon) :is(p, li, figcaption) a:not(.button):not(.icon-link):focus-visible,
+.publication-authors a:hover,
+.publication-authors a:focus-visible,
+.related-item a:not(.related-bibtex):hover,
+.related-item a:not(.related-bibtex):focus-visible,
+a.plain-link:hover,
+a.plain-link:focus-visible {
+  background-size: 100% 1.5px;
+}
+
+/* ---- 3. Footer icons ---- */
+
+/* The colophon's source glyph is grouped with the icon row rather than with the prose:
+   it is a mark, so it takes the row's lift-and-glow instead of the sliding underline
+   that every other link inside `.content p` gets. `inline-block` is what makes
+   `translateY` apply at all — an inline box ignores it.
+
+   The theme toggle is deliberately not included. It already answers a hover with the
+   sun setting and the moon rising, and stacking a lift on top of that reads as two
+   competing gestures on one glyph. the reference implementation draws the same line, via
+   `footer a:not(#theme-toggle)`. */
+.footer .icon-link,
+.footer .colophon a:not(.plain-link) {
+  display: inline-block;
+  transition: color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+}
+
+.footer .icon-link:hover,
+.footer .colophon a:not(.plain-link):hover {
+  transform: translateY(-3px);
+  filter: drop-shadow(0 3px 6px var(--shadow-glow));
+}
+
+/* ---- Touch devices ----
+ * A tap triggers :hover and it sticks, so a tapped button stays lifted and a
+ * tapped link keeps its underline. Withdraw all of it where there is no pointer. */
+@media (hover: none) {
+
+  .publication-links .button:hover,
+  .link-block .button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .content:not(.colophon) :is(p, li, figcaption) a:not(.button):not(.icon-link):hover,
+  .publication-authors a:hover,
+  .related-item a:not(.related-bibtex):hover,
+  a.plain-link:hover {
+    background-size: 0% 1.5px;
+  }
+
+  .footer .icon-link:hover,
+  .footer .colophon a:not(.plain-link):hover {
+    transform: none;
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .publication-links .button,
+  .link-block .button,
+  .footer .icon-link,
+  .footer .colophon a:not(.plain-link),
+  .content:not(.colophon) :is(p, li, figcaption) a:not(.button):not(.icon-link),
+  .publication-authors a,
+  .related-item a:not(.related-bibtex),
+  a.plain-link {
+    transition: none;
+  }
+
+  .publication-links .button:hover,
+  .link-block .button:hover,
+  .footer .icon-link:hover,
+  .footer .colophon a:not(.plain-link):hover {
+    transform: none;
+  }
+}

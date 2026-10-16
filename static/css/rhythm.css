@@ -1,0 +1,181 @@
+/* ---- Vertical rhythm ----
+ *
+ * Bulma sets one flat value for section padding — `.section` and `.hero-body` are
+ * both `3rem 1.5rem` — and never scales it for narrow screens. 48px above and below
+ * every section reads as generous on a 1440px desktop and as dead space on a 390px
+ * phone, where it is an eighth of the viewport height per gap.
+ *
+ * Two variables define the scale, so the ratio between sections and the footer stays
+ * fixed as they shrink. The desktop values are Bulma's, unchanged; only the narrow
+ * breakpoints step down.
+ */
+
+:root {
+  --section-gap: 3rem;
+  /* 48px */
+  --footer-gap: 3rem;
+}
+
+/* Tablet: one step down. */
+@media screen and (max-width: 1023px) {
+  :root {
+    --section-gap: 2.5rem;
+    /* 40px */
+    --footer-gap: 2.5rem;
+  }
+}
+
+/* Phone: enough to separate sections, not enough to strand them. */
+@media screen and (max-width: 768px) {
+  :root {
+    --section-gap: 2rem;
+    /* 32px */
+    --footer-gap: 2rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  :root {
+    --section-gap: 1.5rem;
+    /* 24px */
+    --footer-gap: 1.5rem;
+  }
+}
+
+.section,
+.hero-body {
+  padding-top: var(--section-gap);
+  padding-bottom: var(--section-gap);
+}
+
+/* Bulma ships `padding: 3rem 1.5rem 6rem` on the footer — the doubled bottom
+   reserves room for a fixed bottom navigation bar, which these pages do not have.
+   It left 192px of blank page below the acknowledgements on mobile. Symmetrical
+   padding instead, on the same scale as the sections. */
+.footer {
+  padding-top: var(--footer-gap);
+  padding-bottom: var(--footer-gap);
+}
+
+/* The last block inside the footer carries its own bottom margin, which stacks on
+   top of the footer's padding. Drop it so the padding alone sets the gap. */
+.footer > .container > *:last-child,
+.footer .content:last-child,
+.footer .columns:last-child {
+  margin-bottom: 0;
+}
+
+/* Horizontal padding stays at Bulma's 1.5rem down to the point where it starts
+   eating the text column, then eases off. */
+@media screen and (max-width: 480px) {
+
+  .section,
+  .hero-body,
+  .footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ---- Teaser ----
+ *
+ * The teaser sits between the title block and the abstract, and both of those bring
+ * their own `var(--section-gap)`. Padding on the teaser itself is therefore a third
+ * gap stacked on the other two, so it is zeroed and the separation is left to the
+ * neighbours — which also means it steps down with the breakpoint like everything
+ * else.
+ *
+ * Two spellings are matched because the five pages disagree on the markup: the project page
+ * and sibling project put a bare `.hero-teaser` div inside `section.hero`, while
+ * speede3dgs, speedysplat and transfira use Bulma's `section.hero.teaser` with a
+ * `.hero-body` (nested at different depths — directly on two of them, inside a
+ * `.container` on the third). The first pair have no padding to begin with; the rest
+ * each had a hardcoded `padding-bottom: 3rem` that did not scale, which is what made
+ * their teaser-to-abstract gap run 48px wider than the project page's at every width.
+ */
+:is(.hero.teaser, .hero-teaser) .hero-body {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* An inline image sits on a text baseline, so the line box adds descender space
+   below it — 7px under transfira's teaser, which is an <img> where the other four
+   are `display: block` videos. Blocking it out makes the measured gap identical
+   everywhere rather than merely close. */
+:is(.hero.teaser, .hero-teaser) :is(img, video) {
+  display: block;
+}
+
+/* ---- Long words at high zoom ----
+ *
+ * WCAG 1.4.10 asks that a page still work at 400% zoom without losing content. These
+ * pages are full of long compounds — "recognizability-informed", "reparameterization",
+ * "MonoDyGauBench" — and at 200% text on a 320px screen those are wider than their
+ * column. Bulma sets `html { overflow-x: hidden }`, so the overflow was not merely
+ * off to one side but clipped and unreachable: measured up to 291px of text in a 256px
+ * box on four of the five pages.
+ *
+ * Breaking mid-word is ugly, which is why this is scoped to prose and left off
+ * headings — Bulma already gives `.title` `word-break: break-word`. `overflow-wrap`
+ * rather than `word-break` so a break only happens when the word cannot fit at all.
+ */
+.content p,
+.content li,
+figcaption {
+  overflow-wrap: break-word;
+}
+
+/* ---- In-page anchor links ----
+ * An anchor jump lands the target flush against the top of the viewport, which
+ * puts a section heading right at the edge. A little scroll-margin gives it room.
+ * Smooth scrolling is skipped for anyone who asked for reduced motion. */
+:target {
+  scroll-margin-top: 1.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ---- Footer icon row ----
+ *
+ * The icons have different intrinsic widths (21.9px for the X/arXiv glyph up to
+ * 28.1px for YouTube), so laying them out as inline elements spaced by collapsed
+ * whitespace — 4.2px — made the row look unevenly distributed and cramped.
+ *
+ * A flex row with a fixed gap spaces them by their boxes rather than their glyphs,
+ * and giving each a square min box centres every glyph in an equal cell, so the
+ * rhythm is even regardless of glyph width. The box also reaches the 44px tap
+ * target the WCAG pointer-target guidance asks for; the glyphs themselves are
+ * unchanged in size.
+ */
+.footer .content.has-text-centered:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.footer .icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Colour tokens and every colour rule now live in theme.css, so light and dark are
+   defined in one place. This file keeps the spacing and layout decisions. */
+
+/* ---- Room above the page title ----
+ * The template pulls `.publication-title` up by 20px, which reads well against the
+ * 3rem desktop section gap but left only 12px of air above the title once the gap
+ * stepped down to 2rem on a phone. Give the first hero back what the negative margin
+ * takes, so the title clears the top of the viewport by the same amount everywhere.
+ */
+main > .hero:first-of-type > .hero-body {
+  padding-top: calc(var(--section-gap) + 20px);
+}
