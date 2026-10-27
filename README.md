@@ -142,8 +142,8 @@ terms along.
   `RIDE_SPLAT_MEDIA_ROOT` when the source directory is stored elsewhere.
 - **In-page PDF viewer** (`pdf-modal.js`)
   PDF links open in a focus-trapped overlay. PDF.js is fetched only on first use to determine an
-  appropriate initial zoom; mobile devices use their native viewer. The Paper controls remain
-  disabled until they can point to the external arXiv PDF.
+  appropriate initial zoom; mobile devices use their native viewer. The Paper controls link to the
+  external arXiv PDF.
 - **Footer colophon** (`.colophon` in `theme.css`)
   Copyright, theme toggle and source link share one line after the paper-link glyph row. The
   toggle is a button because it changes this page rather than navigating elsewhere.
