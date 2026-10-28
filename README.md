@@ -38,13 +38,15 @@ terms along.
 
 ## Performance
 
-- **Packed comparison media.** Each four-way viewer decodes one full-resolution 2×2 video rather
-  than four independent streams. AV1 is preferred, H.264 is the compatibility fallback, and both
-  are fast-start enabled. The source renders are frame-synchronized before packing, so one media
-  clock guarantees exact comparison timing.
-- **Media loaded on demand.** Below-fold video sources and posters remain in `data-` attributes
-  until their carousel approaches the viewport. Only the active slide plays, and an off-screen
-  viewer stops both canvas painting and video decoding.
+- **Packed comparison media.** Each four-way viewer decodes one 2×2 video rather than four
+  independent streams. Phones receive a 1280px-wide pack, tablets and smaller laptops receive a
+  1920px pack, and large screens retain the full-resolution pack. AV1 is preferred, H.264 is the
+  compatibility fallback, and every variant is fast-start enabled. The source renders are
+  frame-synchronized before packing, so one media clock guarantees exact comparison timing.
+- **Media loaded on demand.** The teaser keeps its sources deferred until it approaches the
+  viewport. Below-fold video sources and posters likewise remain in `data-` attributes until their
+  carousel approaches. Only the active slide plays, and an off-screen viewer stops both canvas
+  painting and video decoding.
 - **Frame-synchronized drawing.** The comparison canvas uses `requestVideoFrameCallback` where
   available, painting once per decoded video frame instead of once per display refresh. Its
   backing store is capped at 2× DPR, beyond which extra pixels cost real per-frame work without a
@@ -138,9 +140,11 @@ terms along.
   masters also mirror the private [`ridesplat/raw-comparisons` release](https://github.com/ridesplat/raw-comparisons/releases/tag/v1-shared-path).
   The build verifies matching dimensions, frame rates and frame counts before packing comparisons,
   writes AV1 and H.264 variants, moves MP4 metadata to the front for progressive playback, and
-  generates lightweight posters. Town02 uses its recommended frame-77-through-216 trim. The packed
-  order is 3DGS/DC-Gaussian on top and RobustSplat/RIDE-Splat on the bottom. Set
-  `RIDE_SPLAT_MEDIA_ROOT` when the source directory is stored elsewhere.
+  generates lightweight posters plus 1280px and 1920px responsive variants. Town02 uses its
+  recommended frame-77-through-216 trim. The packed order is 3DGS/DC-Gaussian on top and
+  RobustSplat/RIDE-Splat on the bottom. Set `RIDE_SPLAT_MEDIA_ROOT` when the source directory is
+  stored elsewhere; use `--responsive-only` to rebuild responsive variants from the packed
+  delivery files.
 - **In-page PDF viewer** (`pdf-modal.js`)
   PDF links open in a focus-trapped overlay. PDF.js is fetched only on first use to determine an
   appropriate initial zoom; mobile devices use their native viewer. The Paper controls link to the

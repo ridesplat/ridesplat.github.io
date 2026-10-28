@@ -250,7 +250,10 @@
         // eight clips would otherwise run eight decoders for one visible video.
         function syncPlayback() {
             const active = activeIndex();
-            if (onScreen) loadImages();
+            if (onScreen) {
+                loadImages();
+                loadBackgroundPosters();
+            }
             slides.forEach(function (slide, i) {
                 const wanted = onScreen && i === active;
                 slide.querySelectorAll("video").forEach(function (v) {
@@ -303,6 +306,13 @@
             if (!v.dataset.poster) return;
             v.poster = v.dataset.poster;
             v.removeAttribute("data-poster");
+        }
+
+        function loadBackgroundPosters() {
+            container.querySelectorAll(".video-compare-container[data-poster]").forEach(function (item) {
+                item.style.backgroundImage = 'url("' + item.dataset.poster + '")';
+                item.removeAttribute("data-poster");
+            });
         }
 
         function loadVideo(v) {

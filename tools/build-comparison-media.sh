@@ -11,6 +11,10 @@ OUTPUT="$ROOT/static/videos"
 
 AV1_CRF=32
 H264_CRF=23
+PHONE_WIDTH=1280
+TABLET_WIDTH=1920
+RESPONSIVE_AV1_CRF=37
+RESPONSIVE_H264_CRF=25
 
 command -v ffmpeg >/dev/null || { echo "ffmpeg not found" >&2; exit 1; }
 command -v ffprobe >/dev/null || { echo "ffprobe not found" >&2; exit 1; }
@@ -101,7 +105,50 @@ build_dataset() {
     -frames:v 1 -q:v 4 "$base"_poster.jpg
 }
 
+build_responsive_comparison() {
+  local scene="$1"
+  local tier="$2"
+  local width="$3"
+  local base="$OUTPUT/compare_${scene}_4way"
+
+  # The canvas is capped at 2x device pixel ratio. The 1280px phone and 1920px
+  # tablet/laptop packs avoid a 3.8K decode and multi-tens-of-megabytes transfer
+  # while retaining enough source resolution for interactive quadrant crops.
+  # Transcode each codec from its matching high-quality delivery file so this
+  # target can also be rebuilt without access to the private source renders.
+  echo "==> $scene: $tier AV1"
+  ffmpeg -nostdin -y -v error -i "$base.av1.mp4" \
+    -map 0:v:0 -an -vf "scale=${width}:-2:flags=lanczos" \
+    -c:v libsvtav1 -preset 6 -crf "$RESPONSIVE_AV1_CRF" -svtav1-params tune=0 \
+    -pix_fmt yuv420p -g 120 -tag:v av01 -movflags +faststart \
+    -map_metadata -1 "$base.$tier.av1.mp4"
+
+  echo "==> $scene: $tier H.264"
+  ffmpeg -nostdin -y -v error -i "$base.mp4" \
+    -map 0:v:0 -an -vf "scale=${width}:-2:flags=lanczos" \
+    -c:v libx264 -preset slow -crf "$RESPONSIVE_H264_CRF" -profile:v high \
+    -pix_fmt yuv420p -movflags +faststart \
+    -map_metadata -1 "$base.$tier.mp4"
+}
+
+build_all_responsive_comparisons() {
+  local scene
+  for scene in rs2 xld_Town02 wayve_s004 wayve_s005; do
+    build_responsive_comparison "$scene" phone "$PHONE_WIDTH"
+    build_responsive_comparison "$scene" tablet "$TABLET_WIDTH"
+  done
+}
+
 mkdir -p "$OUTPUT"
+
+if [ "${1:-}" = "--responsive-only" ]; then
+  [ "$#" -eq 1 ] || { echo "usage: $0 [--responsive-only]" >&2; exit 2; }
+  build_all_responsive_comparisons
+  echo "Done. Run ./cache_bust.py --apply after changing media."
+  exit 0
+fi
+
+[ "$#" -eq 0 ] || { echo "usage: $0 [--responsive-only]" >&2; exit 2; }
 
 pack_comparison rs2 \
   "$COMPARISON_MASTERS/rs2_3dgs.mp4" \
@@ -126,6 +173,8 @@ pack_comparison wayve_s005 \
   "$COMPARISON_MASTERS/wayve_s005_dcgaussian.mp4" \
   "$COMPARISON_MASTERS/wayve_s005_robustsplat.mp4" \
   "$COMPARISON_MASTERS/wayve_s005_ours.mp4"
+
+build_all_responsive_comparisons
 
 build_dataset rs1
 build_dataset rs2

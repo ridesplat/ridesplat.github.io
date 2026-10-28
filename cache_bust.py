@@ -44,7 +44,7 @@ _EXT_ALT = "|".join(ASSET_EXTS)
 # and data-src is the deferred source slideshow.js promotes to src when a slide
 # first becomes visible. Both are real asset references and need versioning too.
 HTML_ATTR_RE = re.compile(
-    r'(?P<attr>href|src|data-src|poster)="(?P<url>[^"]+?\.(?:' + _EXT_ALT + r'))'
+    r'(?P<attr>href|src|data-src|poster|data-poster)="(?P<url>[^"]+?\.(?:' + _EXT_ALT + r'))'
     r'(?:\?v=[^"]*)?"'
 )
 

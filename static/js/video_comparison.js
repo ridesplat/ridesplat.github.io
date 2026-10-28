@@ -26,6 +26,48 @@ function perFrame(fn) {
     };
 }
 
+/* The teaser is below the title and author block on narrow screens. Keeping all
+ * of its sources in data-src prevents the browser from starting a multi-MB
+ * transfer during the critical render; promote them shortly before the teaser
+ * scrolls into view. Carousel comparisons have their own loader. */
+function initDeferredComparisonVideos() {
+    document.querySelectorAll("video[data-lazy-autoplay]").forEach(function (video) {
+        var activated = false;
+
+        function activate() {
+            if (activated) return;
+            activated = true;
+
+            video.querySelectorAll("source[data-src]").forEach(function (source) {
+                source.src = source.dataset.src;
+                source.removeAttribute("data-src");
+            });
+            video.removeAttribute("data-lazy-autoplay");
+            video.load();
+            var promise = video.play();
+            if (promise && promise.catch) promise.catch(function () { });
+        }
+
+        if (!("IntersectionObserver" in window)) {
+            activate();
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+            observer.disconnect();
+            activate();
+        }, { rootMargin: "200px 0px", threshold: 0.01 });
+        observer.observe(video.parentElement);
+    });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDeferredComparisonVideos);
+} else {
+    initDeferredComparisonVideos();
+}
+
 function resizeAndPlayFourWay(video) {
     var canvas = document.getElementById(video.id + "Merge");
     if (!canvas || video.dataset.fourWayReady || video.dataset.fourWayPending) return;

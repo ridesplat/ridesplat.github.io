@@ -18,7 +18,7 @@
   font-style: normal;
   font-weight: 900;
   font-display: block;
-  src: url("../webfonts/fa-solid-900.woff2?v=2026.10.14.10") format("woff2");
+  src: url("../webfonts/fa-solid-900.woff2?v=2026.10.27.1") format("woff2");
 }
 
 @font-face {
@@ -26,7 +26,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url("../webfonts/fa-brands-400.woff2?v=2026.10.14.10") format("woff2");
+  src: url("../webfonts/fa-brands-400.woff2?v=2026.10.27.1") format("woff2");
 }
 
 @font-face {
@@ -34,7 +34,7 @@
   font-style: normal;
   font-weight: normal;
   font-display: block;
-  src: url("../webfonts/academicons.woff2?v=2026.10.14.10") format("woff2");
+  src: url("../webfonts/academicons.woff2?v=2026.10.27.1") format("woff2");
 }
 
 /* Shared glyph rendering. `fa` is included because the markup mixes the v4

@@ -361,10 +361,10 @@ body {
   height: 0;
 }
 
-/* The source is a side-by-side pair, so the visible half is 16:9. Without this
-   the canvas holds its default 300x150 ratio until the slider initialises. */
+/* Reserve the real packed-video ratio before the deferred source loads. Scenes
+   opt into their exact ratio through --comparison-aspect; 16:9 is the fallback. */
 .video-compare-container canvas.videoMerge {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: var(--comparison-aspect, 16 / 9);
 }
 
 /* ---- Related work ----
