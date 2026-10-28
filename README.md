@@ -4,7 +4,8 @@ Website source for [RIDE-Splat](https://ridesplat.github.io/).
 
 Built as plain HTML, CSS and JavaScript — no framework and no application build step, so what is
 in the repository is what the browser gets. The notes below cover the parts that are not obvious
-from reading the markup. The RIDE-Splat Dataset release location is pending.
+from reading the markup. The [RIDE-Splat code](https://github.com/ridesplat/ride-splat) and
+[dataset](https://github.com/ridesplat/ride-splat-dataset) are available on GitHub.
 
 ---
 
