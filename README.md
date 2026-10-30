@@ -117,6 +117,7 @@ terms along.
 │   ├── build-icons.sh            # regenerate favicon/touch-icon assets
 │   ├── build-media.sh            # generic media encoder
 │   ├── build-results-table.sh    # rasterize Table II from a supplied paper PDF
+│   ├── build-social-videos.py    # render social wipes and dataset montage
 │   └── build-webfonts.sh         # rebuild font subsets
 ├── cache_bust.py                 # stamp ?v= on every local asset
 ├── run_server.sh
@@ -145,6 +146,11 @@ terms along.
   RobustSplat/RIDE-Splat on the bottom. Set `RIDE_SPLAT_MEDIA_ROOT` when the source directory is
   stored elsewhere; use `--responsive-only` to rebuild responsive variants from the packed
   delivery files.
+- **Social exports** (`tools/build-social-videos.py`)
+  Recreates the moving baseline-versus-RIDE-Splat wipe used by the RIDE-Splat teaser and builds a
+  vertically stacked montage of all three dataset traversals. Wipes carry method labels, while the
+  montage has a title banner and labels each scene in the middle. Finished 1080px MP4s and poster
+  frames go to the gitignored `social/` folder.
 - **In-page PDF viewer** (`pdf-modal.js`)
   PDF links open in a focus-trapped overlay. PDF.js is fetched only on first use to determine an
   appropriate initial zoom; mobile devices use their native viewer. The Paper controls link to the

@@ -1,2 +1,5 @@
 **/.DS_Store
 
+# Locally rendered social exports are upload artifacts, not website assets.
+/social/
+
