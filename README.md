@@ -131,7 +131,8 @@ terms along.
   One packed 2×2 source is cropped into four canvas regions around a cross that moves on both
   axes. Labels remain canvas-drawn and resolution-independent rather than burned into the media.
   Pointer, touch and keyboard input share one position model; click, Space or Enter toggles
-  playback. The teaser pauses when it leaves the viewport.
+  playback. On desktop the cross snaps back to its centered default when the pointer leaves.
+  The teaser pauses when it leaves the viewport.
 - **Dataset and results carousels** (`slideshow.js` + `slideshow.css`)
   Dependency-free cyclic rings with arrows, dots and keyboard navigation. The dataset tours keep
   their reflective and non-reflective traversals side by side. Results comparisons disable swipe
@@ -165,11 +166,17 @@ These paper pages share the same foundation — purged Bulma, self-hosted font s
 carousels, theme switching, cache busting and media build tools. Read any of them as reference
 code, and borrow freely:
 
+- **[GOFish](https://3dgofish.github.io/)** — [source](https://github.com/3dgofish/3dgofish.github.io)
 - **[PUP 3D-GS](https://pup3dgs.github.io/)** — [source](https://github.com/pup3dgs/pup3dgs.github.io)
 - **[Speedy-Splat](https://speedysplat.github.io/)** — [source](https://github.com/speedysplat/speedysplat.github.io)
 - **[SpeeDe3DGS](https://speede3dgs.github.io/)** — [source](https://github.com/speede3dgs/speede3dgs.github.io)
 - **[SplatSuRe](https://splatsure.github.io/)** — [source](https://github.com/splatsure/splatsure.github.io)
 - **[TransFIRA](https://transfira.github.io/)** — [source](https://github.com/transfira/transfira.github.io)
+
+My personal site, **[tuallen.github.io](https://tuallen.github.io/)**
+([source](https://github.com/tuallen/tuallen.github.io)), is a separate lineage — a different
+template, no Bulma, and its own component system — but it shares the carousel behaviour, theme
+toggle, cache-busting approach, and other web-delivery conventions used across these sites.
 
 If you are starting a paper page from scratch, take Nerfies as the base and treat these as worked
 examples of where to go next. Anything from these repositories carries the CC BY-SA 4.0 terms

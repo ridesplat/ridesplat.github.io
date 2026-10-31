@@ -206,6 +206,15 @@ function initialiseFourWayComparison(video, canvas) {
         setPosition(event.clientX, event.clientY);
     }, { passive: true });
 
+    canvas.addEventListener("mouseleave", function () {
+        if (window.matchMedia &&
+            !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+        positionX = 0.5;
+        positionY = 0.5;
+        updateAriaValue();
+        paintSoon();
+    }, { passive: true });
+
     canvas.addEventListener("touchstart", function (event) {
         var touch = event.touches[0];
         var rect = canvas.getBoundingClientRect();
